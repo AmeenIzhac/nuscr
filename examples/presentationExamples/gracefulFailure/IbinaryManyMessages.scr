@@ -1,0 +1,53 @@
+global protocol IbinaryManyMessages(role A, role B)
+{
+choice at A {                         
+  MSG1() from A to B;
+  choice at A {
+    MSG2() from A to B;
+    choice at A {
+      MSG3() from A to B;
+      choice at A {
+        MSG4() from A to B;
+        choice at A {
+          MSG5() from A to B;
+          choice at A {
+            MSG6() from A to B;
+            choice at A {
+              MSG7() from A to B;
+              choice at A {
+                MSG8() from A to B;
+                choice at A {
+                  MSG9() from A to B;
+                  choice at A {
+                    MSG10() from A to B;
+                  } or {
+                    CRASH() from A to B;
+                  }
+                } or {
+                  CRASH() from A to B;
+                }
+              } or {
+                CRASH() from A to B;
+              }
+            } or {
+              CRASH() from A to B;
+            }
+          } or {
+            CRASH() from A to B;
+          }
+        } or {
+          CRASH() from A to B;
+        }
+      } or {
+        CRASH() from A to B;
+      }
+    } or {
+      CRASH() from A to B;
+    }
+  } or {
+    CRASH() from A to B;
+  }
+} or {
+  CRASH() from A to B;
+}
+}

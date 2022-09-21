@@ -1,0 +1,72 @@
+global protocol example10(role A, role B, role C, role D) 
+{
+    rec X {                               
+    choice at A {
+        l1() from A to B;
+        choice at A {
+        l2() from A to C;
+        choice at A {
+            l3() from A to D;
+            choice at A {
+            l4() from A to B;
+            choice at A {
+                l5() from A to C;
+                choice at A {
+                l6() from A to D;
+                } or {
+                CRASH() from A to D;
+                EXIT() from D to A;
+                EXIT() from D to B;
+                EXIT() from D to C;
+                }
+            } or {
+                CRASH() from A to C;
+                EXIT() from C to A;
+                EXIT() from C to B;
+                EXIT() from C to D;
+            }
+            } or {
+            l7() from A to B;
+            choice at A {
+                l8() from A to C;
+                choice at A {
+                l9() from A to D;
+                continue X;
+                } or {
+                CRASH() from A to D;
+                EXIT() from D to A;
+                EXIT() from D to B;
+                EXIT() from D to C;
+                }
+            } or {
+                CRASH() from A to C;
+                EXIT() from C to A;
+                EXIT() from C to B;
+                EXIT() from C to D;
+            }
+            } or {
+            CRASH() from A to B;
+            EXIT() from B to B;
+            EXIT() from B to C;
+            EXIT() from B to D;
+            }
+        } or {
+            CRASH() from A to D;
+            EXIT() from D to A;
+            EXIT() from D to B;
+            EXIT() from D to C;
+        }
+        } or {
+        CRASH() from A to C;
+        EXIT() from C to A;
+        EXIT() from C to B;
+        EXIT() from C to D;
+        }
+    } or {
+        CRASH() from A to B;
+        EXIT() from B to B;
+        EXIT() from B to C;
+        EXIT() from B to D;
+    }
+    }
+}

@@ -1,0 +1,29 @@
+global protocol LmanuallyTransformed(role A, role B, role C, role D)
+{
+    MSG1() from A to B;
+    MSG2() from B to C;
+    choice at C
+    {
+        MSG3() from C to D;
+        choice at D
+        {
+            MSG5() from D to A;
+        }
+        or
+        {
+            MSG6() from D to A;
+        }
+    }
+    or
+    {
+        MSG7() from C to D;
+        choice at D
+        {
+            MSG8() from D to A;
+        }
+        or
+        {
+            MSG9() from D to A;
+        }
+    }
+}

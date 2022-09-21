@@ -1,0 +1,9 @@
+global protocol Grecursion(role A, role B, role C) {
+    rec X
+    {                              
+        MSG1() from A to B;
+        MSG2() from A to C;
+        continue X;
+    }
+}
+

@@ -1,0 +1,58 @@
+module TravelAgency;
+
+global protocol TravelAgency(role A, role B, role S) {           
+    choice at B {
+        Suggest(string) from B to A;
+        choice at A {
+            Query(string) from A to S;
+            choice at S {
+                Available(number) from S to A;
+                choice at A {
+                    Quote(number) from A to B;
+                    choice at B {
+                        OK(number) from B to A;
+                        choice at A {
+                            Confirm(number) from A to S;
+                        } or {
+                            CRASH() from A to S;
+                        }
+                    } or {
+                        No() from B to A;
+                        choice at A {
+                            Reject() from A to S;
+                        } or {
+                            CRASH() from A to S;
+                        }
+                    } or {
+                        CRASH() from B to A;
+                        EXIT() from A to S;
+                    }
+                } or {
+                    CRASH() from A to B;
+                    CRASH() from A to S;
+                }
+            } or {
+                Full() from S to A;
+                choice at A {
+                    Full() from A to B;
+                    do TravelAgency(A, B, S);
+                } or {
+                    CRASH() from A to B;
+                }
+            } or {
+                CRASH() from S to A;
+                EXIT() from A to B;
+                EXIT() from B to A;
+            }
+        } or {
+            CRASH() from A to S;
+            CRASH() from A to B;
+            EXIT() from B to A;
+        }
+    } or {
+        CRASH() from B to A;
+        EXIT() from A to S;
+        EXIT() from S to A;
+        EXIT() from A to S;
+    }
+}

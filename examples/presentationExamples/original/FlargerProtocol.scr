@@ -1,0 +1,24 @@
+global protocol FlargerProtocol(role A, role B, role C, role D) 
+{
+    MSG1() from A to B;
+    choice at B 
+    {
+        MSG2() from B to C;
+        MSG3() from B to C;
+        choice at C
+        {
+            MSG4() from C to D;
+            MSG5() from D to C;
+        }
+    }
+    or
+    {
+        MSG6() from B to C;
+        MSG7() from B to C;
+        choice at C
+        {
+            MSG8() from C to D;
+            MSG9() from C to D;
+        }
+    }
+}

@@ -140,7 +140,7 @@ let main file enumerate verbose go_path out_dir project fsm gencode_ocaml
         ~f:(fun protocol ->
           let protocol = ProtocolName.of_string protocol in
           let gtype = Nuscrlib.get_global_type1 ~protocol ast in
-          Nuscrlib.Gtype.show gtype |> print_endline )
+          Nuscrlib.Gtype.show1 gtype |> print_endline )
         show_global_type1
     in
     let () =

@@ -1,0 +1,98 @@
+global protocol JmanyRoles(role A, role B, role C, role D, role E, role F, role G, role H, role I, role J, role K)
+{
+  choice at A {                         
+    MSG1() from A to B;
+    choice at B {
+      MSG2() from B to C;
+      choice at C {
+        MSG3() from C to D;
+        choice at D {
+          MSG4() from D to E;
+          choice at E {
+            MSG5() from E to F;
+            choice at F {
+              MSG6() from F to G;
+              choice at G {
+                MSG7() from G to H;
+                choice at H {
+                  MSG8() from H to I;
+                  choice at I {
+                    MSG9() from I to J;
+                    choice at J {
+                      MSG10() from J to K;
+                    } or {
+                      CRASH() from J to K;
+                    }
+                  } or {
+                    CRASH() from I to J;
+                    EXIT() from J to K;
+                  }
+                } or {
+                  CRASH() from H to I;
+                  EXIT() from I to J;
+                  EXIT() from J to K;
+                }
+              } or {
+                CRASH() from G to H;
+                EXIT() from H to I;
+                EXIT() from I to J;
+                EXIT() from J to K;
+              }
+            } or {
+              CRASH() from F to G;
+              EXIT() from G to H;
+              EXIT() from H to I;
+              EXIT() from I to J;
+              EXIT() from J to K;
+            }
+          } or {
+            CRASH() from E to F;
+            EXIT() from F to G;
+            EXIT() from G to H;
+            EXIT() from H to I;
+            EXIT() from I to J;
+            EXIT() from J to K;
+          }
+        } or {
+          CRASH() from D to E;
+          EXIT() from E to F;
+          EXIT() from F to G;
+          EXIT() from G to H;
+          EXIT() from H to I;
+          EXIT() from I to J;
+          EXIT() from J to K;
+        }
+      } or {
+        CRASH() from C to D;
+        EXIT() from D to E;
+        EXIT() from E to F;
+        EXIT() from F to G;
+        EXIT() from G to H;
+        EXIT() from H to I;
+        EXIT() from I to J;
+        EXIT() from J to K;
+      }
+    } or {
+      CRASH() from B to C;
+      EXIT() from C to D;
+      EXIT() from D to E;
+      EXIT() from E to F;
+      EXIT() from F to G;
+      EXIT() from G to H;
+      EXIT() from H to I;
+      EXIT() from I to J;
+      EXIT() from J to K;
+    }
+  } or {
+    CRASH() from A to B;
+    EXIT() from B to C;
+    EXIT() from C to D;
+    EXIT() from D to E;
+    EXIT() from E to F;
+    EXIT() from F to G;
+    EXIT() from G to H;
+    EXIT() from H to I;
+    EXIT() from I to J;
+    EXIT() from J to K;
+  }
+}

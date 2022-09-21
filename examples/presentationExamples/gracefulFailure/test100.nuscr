@@ -1,0 +1,256 @@
+module test100;
+type <java> "java.lang.Integer" from "rt.jar" as int;
+
+global protocol test100(role S, role C)
+{
+choice at C {                         
+  hello(x1: int) from C to S;
+  choice at S {
+    hello(x2: int) from S to C;
+    choice at C {
+      hello(x3: int) from C to S;
+      choice at S {
+        hello(x4: int) from S to C;
+        choice at C {
+          hello(x5: int) from C to S;
+          choice at S {
+            hello(x6: int) from S to C;
+            choice at C {
+              hello(x7: int) from C to S;
+              choice at S {
+                hello(x8: int) from S to C;
+                choice at C {
+                  hello(x9: int) from C to S;
+                  choice at S {
+                    hello(x10: int) from S to C;
+                    choice at C {
+                      hello(x11: int) from C to S;
+                      choice at S {
+                        hello(x12: int) from S to C;
+                        choice at C {
+                          hello(x13: int) from C to S;
+                          choice at S {
+                            hello(x14: int) from S to C;
+                            choice at C {
+                              hello(x15: int) from C to S;
+                              choice at S {
+                                hello(x16: int) from S to C;
+                                choice at C {
+                                  hello(x17: int) from C to S;
+                                  choice at S {
+                                    hello(x18: int) from S to C;
+                                    choice at C {
+                                      hello(x19: int) from C to S;
+                                      choice at S {
+                                        hello(x20: int) from S to C;
+                                        choice at C {
+                                          hello(x21: int) from C to S;
+                                          choice at S {
+                                            hello(x22: int) from S to C;
+                                            choice at C {
+                                              hello(x23: int) from C to S;
+                                              choice at S {
+                                                hello(x24: int) from S to C;
+                                                choice at C {
+                                                  hello(x25: int) from C to S;
+                                                  choice at S {
+                                                    hello(x26: int) from S to C;
+                                                    choice at C {
+                                                      hello(x27: int) from C to S;
+                                                      choice at S {
+                                                        hello(x28: int) from S to C;
+                                                        choice at C {
+                                                          hello(x29: int) from C to S;
+                                                          choice at S {
+                                                            hello(x30: int) from S to C;
+                                                            choice at C {
+                                                              hello(x31: int) from C to S;
+                                                              choice at S {
+                                                                hello(x32: int) from S to C;
+                                                                choice at C {
+                                                                  hello(x33: int) from C to S;
+                                                                  choice at S {
+                                                                    hello(x34: int) from S to C;
+                                                                    choice at C {
+                                                                      hello(x35: int) from C to S;
+                                                                      choice at S {
+                                                                        hello(x36: int) from S to C;
+                                                                        choice at C {
+                                                                          hello(x37: int) from C to S;
+                                                                          choice at S {
+                                                                            hello(x38: int) from S to C;
+                                                                            choice at C {
+                                                                              hello(x39: int) from C to S;
+                                                                              choice at S {
+                                                                                hello(x40: int) from S to C;
+                                                                                choice at C {
+                                                                                  hello(x41: int) from C to S;
+                                                                                  choice at S {
+                                                                                    hello(x42: int) from S to C;
+                                                                                    choice at C {
+                                                                                      hello(x43: int) from C to S;
+                                                                                      choice at S {
+                                                                                        hello(x44: int) from S to C;
+                                                                                        choice at C {
+                                                                                          hello(x45: int) from C to S;
+                                                                                          choice at S {
+                                                                                            hello(x46: int) from S to C;
+                                                                                            choice at C {
+                                                                                              hello(x47: int) from C to S;
+                                                                                              choice at S {
+                                                                                                hello(x48: int) from S to C;
+                                                                                                choice at C {
+                                                                                                  hello(x49: int) from C to S;
+                                                                                                  choice at S {
+                                                                                                    hello(x50: int) from S to C;
+                                                                                                  } or {
+                                                                                                    CRASH() from S to C;
+                                                                                                  }
+                                                                                                } or {
+                                                                                                  CRASH() from C to S;
+                                                                                                }
+                                                                                              } or {
+                                                                                                CRASH() from S to C;
+                                                                                              }
+                                                                                            } or {
+                                                                                              CRASH() from C to S;
+                                                                                            }
+                                                                                          } or {
+                                                                                            CRASH() from S to C;
+                                                                                          }
+                                                                                        } or {
+                                                                                          CRASH() from C to S;
+                                                                                        }
+                                                                                      } or {
+                                                                                        CRASH() from S to C;
+                                                                                      }
+                                                                                    } or {
+                                                                                      CRASH() from C to S;
+                                                                                    }
+                                                                                  } or {
+                                                                                    CRASH() from S to C;
+                                                                                  }
+                                                                                } or {
+                                                                                  CRASH() from C to S;
+                                                                                }
+                                                                              } or {
+                                                                                CRASH() from S to C;
+                                                                              }
+                                                                            } or {
+                                                                              CRASH() from C to S;
+                                                                            }
+                                                                          } or {
+                                                                            CRASH() from S to C;
+                                                                          }
+                                                                        } or {
+                                                                          CRASH() from C to S;
+                                                                        }
+                                                                      } or {
+                                                                        CRASH() from S to C;
+                                                                      }
+                                                                    } or {
+                                                                      CRASH() from C to S;
+                                                                    }
+                                                                  } or {
+                                                                    CRASH() from S to C;
+                                                                  }
+                                                                } or {
+                                                                  CRASH() from C to S;
+                                                                }
+                                                              } or {
+                                                                CRASH() from S to C;
+                                                              }
+                                                            } or {
+                                                              CRASH() from C to S;
+                                                            }
+                                                          } or {
+                                                            CRASH() from S to C;
+                                                          }
+                                                        } or {
+                                                          CRASH() from C to S;
+                                                        }
+                                                      } or {
+                                                        CRASH() from S to C;
+                                                      }
+                                                    } or {
+                                                      CRASH() from C to S;
+                                                    }
+                                                  } or {
+                                                    CRASH() from S to C;
+                                                  }
+                                                } or {
+                                                  CRASH() from C to S;
+                                                }
+                                              } or {
+                                                CRASH() from S to C;
+                                              }
+                                            } or {
+                                              CRASH() from C to S;
+                                            }
+                                          } or {
+                                            CRASH() from S to C;
+                                          }
+                                        } or {
+                                          CRASH() from C to S;
+                                        }
+                                      } or {
+                                        CRASH() from S to C;
+                                      }
+                                    } or {
+                                      CRASH() from C to S;
+                                    }
+                                  } or {
+                                    CRASH() from S to C;
+                                  }
+                                } or {
+                                  CRASH() from C to S;
+                                }
+                              } or {
+                                CRASH() from S to C;
+                              }
+                            } or {
+                              CRASH() from C to S;
+                            }
+                          } or {
+                            CRASH() from S to C;
+                          }
+                        } or {
+                          CRASH() from C to S;
+                        }
+                      } or {
+                        CRASH() from S to C;
+                      }
+                    } or {
+                      CRASH() from C to S;
+                    }
+                  } or {
+                    CRASH() from S to C;
+                  }
+                } or {
+                  CRASH() from C to S;
+                }
+              } or {
+                CRASH() from S to C;
+              }
+            } or {
+              CRASH() from C to S;
+            }
+          } or {
+            CRASH() from S to C;
+          }
+        } or {
+          CRASH() from C to S;
+        }
+      } or {
+        CRASH() from S to C;
+      }
+    } or {
+      CRASH() from C to S;
+    }
+  } or {
+    CRASH() from S to C;
+  }
+} or {
+  CRASH() from C to S;
+}
+}

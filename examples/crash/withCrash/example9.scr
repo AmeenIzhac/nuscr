@@ -1,0 +1,50 @@
+global protocol example9(role A, role B, role C, role D) 
+{
+    rec X {                               
+    choice at A {
+        l2() from A to B;
+        choice at B {
+        l3() from B to C;
+        choice at C {
+            l4() from C to D;
+        } or {
+            l5() from C to D;
+        } or {
+            CRASH() from C to D;
+            EXIT() from D to A;
+            EXIT() from D to B;
+            EXIT() from D to C;
+        }
+        } or {
+        CRASH() from B to C;
+        EXIT() from C to A;
+        EXIT() from C to B;
+        EXIT() from C to D;
+        }
+    } or {
+        l6() from A to B;
+        choice at B {
+        l7() from B to C;
+        choice at C {
+            l8() from C to D;
+            continue X;
+        } or {
+            CRASH() from C to D;
+            EXIT() from D to A;
+            EXIT() from D to B;
+            EXIT() from D to C;
+        }
+        } or {
+        CRASH() from B to C;
+        EXIT() from C to A;
+        EXIT() from C to B;
+        EXIT() from C to D;
+        }
+    } or {
+        CRASH() from A to B;
+        EXIT() from B to B;
+        EXIT() from B to C;
+        EXIT() from B to D;
+    }
+    }
+}

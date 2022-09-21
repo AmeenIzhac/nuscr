@@ -1,0 +1,5 @@
+global protocol playground(role A, role B) 
+{
+    l1() from A to B;
+    l2() from A to B;
+}

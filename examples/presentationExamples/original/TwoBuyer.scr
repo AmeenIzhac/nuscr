@@ -1,0 +1,18 @@
+module TwoBuyer;
+
+global protocol TwoBuyer(role A, role B, role S)
+{
+  title(number) from A to S;
+  quote(number) from S to A;
+  quote(number) from S to B;
+  quoteByTwo(z:Int) from A to B;
+  choice at B
+  {
+    ok(Int) from B to S; @"z > y - 2"
+    empty1(Int) from S to B;
+  }
+  or
+  {
+    quit() from B to S; @"z <= y - 2"
+  }
+}

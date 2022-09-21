@@ -1,0 +1,14 @@
+global protocol DnonBinaryProtocol(role A, role B, role C) 
+{
+choice at A {                         
+  MSG1() from A to B;
+  choice at A {
+    MSG2() from A to C;
+  } or {
+    CRASH() from A to C;
+  }
+} or {
+  CRASH() from A to B;
+  CRASH() from A to C;
+}
+}

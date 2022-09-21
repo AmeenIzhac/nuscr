@@ -1,0 +1,4 @@
+global protocol AmostSimpleCase(role A, role B) 
+{
+    MSG() from A to B;
+}

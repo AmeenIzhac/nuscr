@@ -1,0 +1,4 @@
+    global protocol doit1(role A, role B, role C) {
+        HELLO() from A to B;
+        HELLO() from A to C;
+    }

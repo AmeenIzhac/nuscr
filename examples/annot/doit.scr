@@ -1,0 +1,40 @@
+global protocol doit(role A, role B, role C) 
+{
+    choice at A 
+    {
+        HELLO() from A to B;
+        choice at A 
+        {
+            HELLO() from A to C;
+        }
+        or
+        {
+            CRASH() from A to C;
+        }
+    } 
+    or
+    {
+        CRASH() from A to B;
+    }
+}
+
+
+global protocol doit(role A, role B, role C) 
+{
+    choice at A 
+    {                         
+        HELLO() from A to B;
+        choice at A 
+        {
+            HELLO() from A to C;
+        } 
+        or 
+        {
+            CRASH() from A to C;
+        }
+    } 
+    or 
+    {
+        CRASH() from A to B;
+    }
+}

@@ -1,0 +1,4 @@
+global protocol example1(role A, role B, role C, role D) 
+{
+    l1() from A to B;
+}

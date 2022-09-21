@@ -1,0 +1,19 @@
+global protocol Grecursion(role A, role B, role C) {
+    rec X {
+      choice at A 
+      {
+          MSG1() from A to B;
+          choice at A {
+              MSG2() from A to C;
+              continue X;
+          } or {
+              CRASH() from A to C;
+              EXIT() from A to B;
+          }
+      } or {
+          CRASH() from A to B;
+          EXIT() from A to C;
+      }                           
+    }
+}
+

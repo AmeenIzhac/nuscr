@@ -1,0 +1,56 @@
+global protocol KmanyChoices(role A, role B, role C, role D)
+{
+choice at A {                         
+  MSG1() from A to B;
+  choice at B {
+    MSG2() from B to C;
+    choice at C {
+      MSG3() from C to D;
+    } or {
+      MSG4() from C to D;
+    } or {
+      CRASH() from C to D;
+    }
+  } or {
+    MSG5() from B to C;
+    choice at C {
+      MSG6() from C to D;
+    } or {
+      MSG7() from C to D;
+    } or {
+      CRASH() from C to D;
+    }
+  } or {
+    CRASH() from B to C;
+    EXIT() from C to D;
+  }
+} or {
+  MSG8() from A to B;
+  choice at B {
+    MSG9() from B to C;
+    choice at C {
+      MSG10() from C to D;
+    } or {
+      MSG11() from C to D;
+    } or {
+      CRASH() from C to D;
+    }
+  } or {
+    MSG12() from B to C;
+    choice at C {
+      MSG13() from C to D;
+    } or {
+      MSG14() from C to D;
+    } or {
+      CRASH() from C to D;
+    }
+  } or {
+    CRASH() from B to C;
+    EXIT() from C to D;
+  }
+} or {
+  CRASH() from A to B;
+  EXIT() from B to C;
+  EXIT() from C to D;
+}
+}

@@ -1,0 +1,13 @@
+global protocol JmanyRoles(role A, role B, role C, role D, role E, role F, role G, role H, role I, role J, role K)
+{
+    MSG1() from A to B;
+    MSG2() from B to C;
+    MSG3() from C to D;
+    MSG4() from D to E;
+    MSG5() from E to F;
+    MSG6() from F to G;
+    MSG7() from G to H;
+    MSG8() from H to I;
+    MSG9() from I to J;
+    MSG10() from J to K;
+}

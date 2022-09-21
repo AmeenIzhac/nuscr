@@ -1,0 +1,19 @@
+global protocol example8(role A, role B, role C, role D) 
+{
+    l1() from A to B;
+    l2() from B to C;
+    rec X 
+    {
+        choice at A 
+        {
+            l3() from A to B;
+            l4() from B to C;
+        }
+        or 
+        {
+            l5() from A to B;
+            l6() from B to C;
+            continue X;
+        }
+    }
+ }

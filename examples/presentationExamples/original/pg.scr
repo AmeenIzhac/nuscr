@@ -1,0 +1,33 @@
+global protocol pg(role A, role B, role C, role D) {
+choice at A {                         
+  MSG1() from A to B;
+  choice at B {
+    MSG2() from B to C;
+    choice at C {
+      MSG3() from C to D;
+    } or {
+      CRASH() from C to D;
+    }
+  } or {
+    CRASH() from B to C;
+    choice at C {
+      EXIT() from C to D;
+    } or {
+      CRASH() from C to D;
+    }
+  }
+} or {
+  CRASH() from A to B;
+  choice at B {
+    EXIT() from B to C;
+    choice at C {
+      EXIT() from C to D;
+    } or {
+      CRASH() from C to D;
+    }
+  } or {
+    CRASH() from B to C;
+    EXIT() from C to D;
+  }
+}
+}

@@ -1,0 +1,73 @@
+global protocol delete(role A, role B, role C, role D)
+{
+    l1() from A to B;
+    l2() from B to C;
+}
+
+global protocol delete(role A, role B, role C, role D) 
+{
+    choice at A
+    {
+        l1() from A to B;
+        choice at B
+        {
+            l2() from B to C;
+        }
+        or
+        {
+            CRASH() from B to C;
+        }
+    }
+    or
+    {
+        CRASH() from A to B;
+    }
+}
+
+global protocol delete(role A, role B, role C, role D) 
+{
+    choice at A 
+    {
+        l1() from A to B;
+        choice at C
+        {
+            l2() from C to D;
+        }
+        or
+        {
+            CRASH() from C to D;
+        }
+    }
+    or 
+    {
+        CRASH() from A to B;
+        choice at C
+        {
+            EXIT() from C to D;
+        }
+        or
+        {
+            l2() from C to D;
+        }
+        or
+        {
+            CRASH() from C to D;
+        }
+    }
+}
+
+
+code solution:
+to complete the continuation after CRASH() from (arb) A to (arb) B,
+maintain an initial list participants / {A, B}  that are the participants that need 'dealing' with, 
+then go through each choice carrying this list with me, eliminating participants from the list as i 'deal' with them.
+there is then a set of possible scenarios I can encounter as I go through the choices:
+message from A to B -> no action required 
+message from A to x where x != B -> CRASH()
+message from B to A -> no action required
+message from B to x where x != A -> EXIT() from B to x
+message from x to _ where x != A and x != B -> if there message from y -> x before this then this is ok, the added CRASH() or EXIT() from y to x will be enough, otherwise 💀 (because there is no way to allow x to merge in that case)
+any recursion variable in any case what so ever -> 💀
+
+make two versions, not fully functioning broadcast,
+and simple copy the shortest continuation with weak merge detection and see which to complete properly

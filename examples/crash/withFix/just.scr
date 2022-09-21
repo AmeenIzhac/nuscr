@@ -1,0 +1,32 @@
+global protocol just(role C, role S, role A, role D)
+{
+rec X {
+  choice at C
+  {
+    L2() from C to S;
+    choice at C {
+    L3() from C to D;
+    L2() from C to S;
+    continue X;
+    }
+    or {
+        CRASH() from C to D;
+        CRASH() from C to S;
+    }
+  }
+  or
+  {
+    CRASH() from C to S;
+    CRASH() from C to D;
+  }
+}
+}
+
+choice at A {
+    hi() from A to B;
+    ...
+} 
+or {
+    CRASH() from A to B;
+
+}

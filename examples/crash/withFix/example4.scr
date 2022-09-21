@@ -1,0 +1,23 @@
+global protocol example4(role A, role B, role C, role D) 
+{
+    choice at A {                         
+    l1() from A to B;
+    choice at C {
+        l2() from C to B;
+        choice at B {
+        l3() from B to D;
+        choice at D {
+            l4() from D to B;
+        } or {
+            CRASH() from D to B;
+        }
+        } or {
+        CRASH() from B to D;
+        }
+    } or {
+        CRASH() from C to B;
+    }
+    } or {
+    CRASH() from A to B;
+    }
+}

@@ -1,0 +1,6 @@
+global protocol BmultipleMessages(role A, role B) 
+{
+    MSG1() from A to B;
+    MSG2() from A to B;
+    MSG3() from A to B;
+}

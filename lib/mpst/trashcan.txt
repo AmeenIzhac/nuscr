@@ -139,3 +139,79 @@ let add_crash_branches (located_global_protocol : Syntax.raw_global_protocol loc
                                                           nested_protocols = p_nested_protocols;
                                                           interactions = p_interactions;
                                                           ann = p_ann}}
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+(* let rec last = function
+| [] -> None
+| [x] -> Some x
+| _ :: t -> last t
+
+let rec elem x xs =
+  match xs with
+  | [] -> false
+  | y :: ys -> x = y || elem x ys
+
+let rec nub l =
+  let rec helper l acc =
+    match l with
+    | [] -> acc
+    | x :: xs ->
+        if elem x acc then
+          helper xs acc
+        else
+          helper xs (x :: acc)
+  in List.rev (helper l [])
+
+let rec get_participants gp =
+  nub (get_participants' [] gp)
+  and get_participants' participants gp =
+    match gp with
+    | MessageG (_, from_role, to_role, rest) -> get_participants' (from_role :: to_role :: participants) rest 
+    | MuG (_, _, rest) -> get_participants' participants rest 
+    | ChoiceG (_, choices) -> get_participants'' participants choices  
+    | CallG (caller, _, roles, t)  -> (caller :: roles)
+    | TVarG (_, _, _) -> []
+    | EndG -> []
+    | Empty -> []
+  and get_participants'' roles gps =
+    match gps with
+    | [] -> []
+    | gp :: gps -> get_participants' roles gp :: get_participants'' roles gps *)
+
+(* let can_merge'' (MessageG (crash_msg, from_role, to_role, rest)) other_protocol = 
+  match other_protocol with
+    | MessageG (some_msg, from_role, to_role, rest1) 
+    (* | MuG
+    | TVarG
+    | ChoiceG
+    | EndG
+    | CallG
+    | Empty *)
+
+(* q for fangyi: will i need to carry around all the recursion protocols to refer to them *)
+let rec can_merge (ChoiceG (_, cs)) = 
+  let crash_branch'' = last cs in
+    match crash_branch'' with (* this match is simply to remove the "Some" constructor from the crash_branch *)
+      | Some crash_branch' -> can_merge' crash_branch' cs
+      | None -> false
+      and can_merge' crash_branch cs =
+        match cs with
+        | [] -> true
+        | (choice :: choices) -> (can_merge'' crash_branch choice) && can_merge' crash_branch choices
+
+
+let fail_gracefully gp = gp
+
+let rec fix_any_merge_failures gp = 
+  match gp with
+    | MessageG (msg, from_role, to_role, rest) -> MessageG (msg, from_role, to_role, fix_any_merge_failures rest)
+    | MuG (var_name, var_list, rest) -> MuG (var_name, var_list, fix_any_merge_failures rest)
+    | ChoiceG (r, cs) -> (let cs' = (List.map cs ~f:fix_any_merge_failures) in
+                            if can_merge (ChoiceG (r, cs')) then 
+                              (ChoiceG (r, cs')) 
+                            else 
+                              fail_gracefully (ChoiceG (r, cs')))
+    | CallG (role_name, protocol_name, role_names, rest) -> CallG (role_name, protocol_name, role_names, fix_any_merge_failures rest)
+    | e -> e *)

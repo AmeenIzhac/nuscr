@@ -1,0 +1,7 @@
+global protocol dw(role A, role B, role C, role D) {
+    l1() from A to B;
+    l3() from B to A;
+    l4() from A to C;
+    l5() from C to D;
+}
+

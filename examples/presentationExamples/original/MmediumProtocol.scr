@@ -1,0 +1,17 @@
+global protocol MmediumProtocol(role A, role B, role C, role D) 
+{
+    MSG1() from A to B;
+    choice at B {
+        MSG2() from B to C;
+        MSG3() from B to C;
+        choice at C {
+            MSG4() from C to D;
+        }
+    } or
+    {
+        MS5() from B to C;
+        choice at C {
+            MSG6() from C to D;
+        }
+    }
+}

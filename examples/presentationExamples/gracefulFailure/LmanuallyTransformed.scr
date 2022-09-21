@@ -1,0 +1,44 @@
+global protocol LmanuallyTransformed(role A, role B, role C, role D)
+{
+    choice at A
+    {
+        MSG1() from A to B;
+        choice at B
+        {
+            MSG2() from B to C;
+            choice at C
+            {
+                MSG3() from C to D;
+                choice at D
+                {
+                    MSG4() from D to A;
+                }
+                or
+                {
+                    MSG5() from D to A;
+                }
+                or
+                {
+                    CRASH() from D to A;
+                }
+            }
+            or
+            {
+                CRASH() from C to D;
+                EXIT() from D to A;
+            }
+        }
+        or
+        {
+            CRASH() from B to C;
+            EXIT() from C to D;
+            EXIT() from D to A;
+        }
+    }
+    or
+    {
+        CRASH() from A to B;
+        EXIT() from B to C;
+        EXIT() from C to D;
+    }
+}

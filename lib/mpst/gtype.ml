@@ -391,59 +391,392 @@ let rec add_crash_branches gp =
     | CallG (role_name, protocol_name, role_names, rest) -> CallG (role_name, protocol_name, role_names, add_crash_branches rest)
     | e -> e
 
-(* let rec last = function
-| [] -> None
-| [x] -> Some x
-| _ :: t -> last t
 
-let compatible crash_protocol other_protocol = 
-  match other_protocol with
-    | MessageG
-    | MuG
-    | TVarG
-    | ChoiceG
-    | EndG
-    | CallG
-    | Empty
+(* -------------------------------------------------------------------------------------------------------------------------------------------------------------------- *)
 
-(* a b c *)
-(* hi a to b then  *)
-(* bye a to b then  *)
-(* crash a to b then nothing *)
-(* q for fangyi: will i need to carry around all the recursion protocols to refer to them *)
-(* what to do next: use a  *)
-let rec can_merge (ChoiceG (_, cs)) = 
-  let crash_branch'' = last cs in
-    match crash_branch'' with (* this match is simply to remove the "Some" constructor from the crash_branch *)
-      | Some crash_branch' -> can_merge_branches crash_branch' cs
-      | None -> false
-      and can_merge_branches crash_branch cs =
-        match cs with
-        | [] -> true
-        | (choice :: choices) -> (compatible crash_branch choice) && can_merge_branches crash_branch choices
+let roles_equal r1 r2 = if (RoleName.compare r1 r2) = 0 then true else false
 
+let type_vars_equal r1 r2 = if (TypeVariableName.compare r1 r2) = 0 then true else false
 
-let fail_gracefully gp = gp
-let rec fix_any_merge_failures gp = 
+let rec role_name_elem x items = 
+  match items with
+    | [] -> false
+    | i :: is -> if roles_equal x i then true else role_name_elem x is
+
+let rec nub_role_names l =
+  match l with
+    | [] -> []
+    | (i :: is) -> if (role_name_elem i is) then (nub_role_names is) else (i :: nub_role_names is)
+
+let rec roles gp = nub_role_names (roles' gp)
+  and roles' gp =
+    match gp with
+      | MessageG (_, from_role, to_role, rest) -> from_role :: to_role :: roles' rest
+      | MuG (_, _, rest) -> roles' rest 
+      | ChoiceG (role, choices) -> role :: List.concat (List.map choices ~f:roles')
+      | CallG (_, _, roles, _) -> roles
+      | _ -> []
+
+let rec get_next_interaction gp = 
   match gp with
-    | MessageG (msg, from_role, to_role, rest) -> MessageG (msg, from_role, to_role, fix_any_merge_failures rest)
-    | MuG (var_name, var_list, rest) -> MuG (var_name, var_list, fix_any_merge_failures rest)
-    | ChoiceG (r, cs) -> (let cs' = (List.map cs ~f:fix_any_merge_failures) in
-                            if can_merge (ChoiceG (r, cs')) then 
-                              (ChoiceG (r, cs')) 
-                            else 
-                              fail_gracefully (ChoiceG (r, cs')))
-    | CallG (role_name, protocol_name, role_names, rest) -> CallG (role_name, protocol_name, role_names, fix_any_merge_failures rest)
+    | MessageG (_, _, _, rest) -> [rest]
+    | MuG (_, _, rest) -> get_next_interaction rest 
+    | ChoiceG (_, choices) -> List.concat (List.map choices ~f:get_next_interaction)
+    | _ -> []
+
+let rec match_choices choices from_role to_role =
+  match choices with
+    | [] -> true
+    | MessageG (_, from_role1, to_role1, _) :: cs -> if (roles_equal from_role from_role1 && roles_equal to_role to_role1) then (match_choices cs from_role to_role) else false
+    | _ -> false
+
+let merge_role choices role =
+  let choices' = List.concat (List.map choices ~f:get_next_interaction) in
+    match choices' with
+      | [] -> true
+      | MessageG (_, from_role, _, _) :: _ -> (match_choices choices' from_role role)
+      | _ -> false
+          
+let rec merge_roles choices roles =
+  match roles with
+    | [] -> true
+    | (r :: rs) -> merge_role choices r && merge_roles choices rs
+    
+(* let rec fix_merge_issues gp = 
+  let rs = roles gp in
+    match gp with
+    | MessageG (msg, from_role, to_role, rest) -> MessageG (msg, from_role, to_role, fix_merge_issues rest)
+    | MuG (var_name, rec_vars, rest) -> MuG (var_name, rec_vars, fix_merge_issues rest)
+    | ChoiceG (role, choices) -> if merge_roles choices rs then ChoiceG (role, List.map choices ~f:fix_merge_issues) else copy_first_branch (ChoiceG (role, List.map choices ~f:fix_merge_issues))
     | e -> e *)
-  (* first im gonna try just checking if theres a merge failure, 
-     then if so just copy paste the first branch of the choice as the  continuation in the crash branch,
-     however to do that i need to be able to detect when there is a merge failure,
-     and that seems like its gonna be a interesting problem sth to do w comparing global protocols but before that,
-     i wanna go see how all the other protocols especially some of the big ones didn't have any merge conflicts  *)
+(* and copy_first_branch c =
+match c with 
+  | (ChoiceG (role, choices)) -> (
+  match choices with
+    | [] -> ChoiceG (role, choices) 
+    | (first :: rest) -> (let nis = get_next_interaction first in 
+                            match nis with
+                              | [] -> (ChoiceG (role, choices))
+                              | ni :: _ -> (ChoiceG (role, first :: add_to_last ni rest)))) 
+  | e -> e  *)
+(* and add_to_last protocol choices =
+match choices with
+  | [] -> []
+  | [MessageG (msg, from_role, to_role, Empty)] -> [MessageG (msg, from_role, to_role, fix_merge_issues protocol)]
+  | (c :: cs) -> c :: add_to_last protocol cs *)
+
+
+(* the below code is intended to take a global protocol and add correctly modifield broadcasts (ie only broadcasting to participants who would fail to merge) to its crash handling branches but ive not tested it yet and am getting compilation issues  *)
+let rec add_broadcasts gp top_level_gp =
+  let participants = roles gp in
+    match gp with
+      | MessageG (msg, from_role, to_role, rest) -> MessageG (msg, from_role, to_role,  add_broadcasts rest top_level_gp)
+      | MuG (var_name, rec_vars, rest) -> MuG (var_name, rec_vars, add_broadcasts rest top_level_gp)
+      | ChoiceG (role, choices) -> add_broadcast (ChoiceG (role, recurse_broadcast_to_each_choice choices top_level_gp)) participants top_level_gp
+      | e -> e
+and recurse_broadcast_to_each_choice choices top_level_gp =
+  match choices with
+    | [] -> []
+    | c :: cs -> add_broadcasts c top_level_gp :: recurse_broadcast_to_each_choice cs top_level_gp 
+and add_broadcast choice participants top_level_gp =
+  match choice with
+    | ChoiceG (role, choices) -> ChoiceG (role, add_broadcast' choices choices participants top_level_gp)
+    | e -> e
+and add_broadcast' choices original_choices participants top_level_gp =
+  match choices with
+    | [] -> []
+    | [MessageG (msg, from_role, to_role, Empty)] -> [MessageG (msg, from_role, to_role, create_broadcast to_role participants from_role original_choices top_level_gp)]
+    | (c :: cs) -> c :: add_broadcast' cs original_choices participants top_level_gp
+and create_broadcast broadcaster participants crashed_participant choices top_level_gp = 
+  match participants with
+    | [] -> Empty
+    | (p :: ps) -> (if roles_equal p broadcaster
+                    then 
+                      create_broadcast broadcaster ps crashed_participant choices top_level_gp
+                    else if roles_equal p crashed_participant
+                    then
+                      create_broadcast broadcaster ps crashed_participant choices top_level_gp
+                    else if not (involved_in_others p choices top_level_gp)
+                    then
+                      create_broadcast broadcaster ps crashed_participant choices top_level_gp
+                    else
+                      MessageG ({label = LabelName.of_string "EXIT"; payload = []}, broadcaster, p, create_broadcast broadcaster ps crashed_participant choices top_level_gp))
+and is_involved participant remaining_protocol top_level_gp = 
+  match remaining_protocol with
+    | MessageG (_, from_role, to_role, rest) -> (if roles_equal from_role participant || roles_equal to_role participant
+                                                   then
+                                                     true
+                                                   else 
+                                                     is_involved participant rest top_level_gp)
+    | MuG (_, _, rest) -> is_involved participant rest top_level_gp     
+    | ChoiceG (role, choices) -> (if roles_equal role participant 
+                                  then 
+                                    true 
+                                  else 
+                                    is_involved' participant choices top_level_gp)      
+    | CallG (_, _, roles, rest) -> role_name_elem participant roles || is_involved participant rest top_level_gp
+    | TVarG (rec_var, _, _) -> (let rec_var_def = get_rec_var_def rec_var top_level_gp in 
+                                  is_involved_non_recursive participant rec_var_def) 
+    | _ -> false
+and is_involved' participant choices top_level_gp =
+  match choices with
+       | [] -> false
+       | c :: cs -> is_involved participant c top_level_gp || is_involved' participant cs top_level_gp
+and is_involved_non_recursive participant remaining_protocol = 
+  match remaining_protocol with
+    | MessageG (_, from_role, to_role, rest) -> (if roles_equal from_role participant || roles_equal to_role participant
+                                                   then
+                                                     true
+                                                   else 
+                                                     is_involved_non_recursive participant rest)
+    | MuG (_, _, rest) -> is_involved_non_recursive participant rest      
+    | ChoiceG (role, choices) -> (if roles_equal role participant 
+                                  then 
+                                    true 
+                                  else 
+                                    is_involved_non_recursive' participant choices)      
+    | CallG (_, _, roles, rest) -> role_name_elem participant roles || is_involved_non_recursive participant rest 
+    | _ -> false
+and is_involved_non_recursive' participant choices =
+  match choices with
+       | [] -> false
+       | c :: cs -> is_involved_non_recursive participant c || is_involved_non_recursive' participant cs
+and get_rec_var_def rec_var gp =
+  match gp with
+    | MessageG (_, _, _, rest) -> get_rec_var_def rec_var rest
+    | MuG (type_var, rec_var_list, def) -> if type_vars_equal rec_var type_var
+                                           then
+                                             MuG (type_var, rec_var_list, def)
+                                           else
+                                             get_rec_var_def rec_var def
+    | ChoiceG (_, choices) -> get_rec_var_def' rec_var choices
+    | _ -> EndG
+and get_rec_var_def' rec_var gps =
+  match gps with
+    | [] -> EndG
+    | p :: ps -> let check = get_rec_var_def rec_var p in
+                   match check with
+                     | EndG -> get_rec_var_def' rec_var ps
+                     | e -> e
+and involved_in_others participant choices top_level_gp =
+  match choices with
+    | [] -> false
+    | [_] -> false
+    | c :: cs -> is_involved participant c top_level_gp || involved_in_others participant cs top_level_gp
+ 
+(* let rec fix_merge_issues1 gp =
+  match gp with
+    | MessageG (msg, from_role, to_role, rest) -> MessageG (msg, from_role, to_role, fix_merge_issues1 rest)
+    | MuG (var_name, rec_vars, rest) -> MuG (var_name, rec_vars, fix_merge_issues1 rest)
+    | ChoiceG (role, choices) -> copy_first_branch (ChoiceG (role, List.map choices ~f:fix_merge_issues1))
+    (* | CallG (role_name, protocol_name, role_names, rest) -> CallG (role_name, protocol_name, role_names, fix_merge_issues1 rest) *)
+    | e -> e
+and copy_first_branch c =
+match c with 
+  | (ChoiceG (role, choices)) -> (
+  match choices with
+    | [] -> ChoiceG (role, choices)
+    | (first :: rest) -> (let nis = get_next_interaction first in 
+                            match nis with
+                              | [] -> (ChoiceG (role, choices))
+                              | ni :: _ -> (ChoiceG (role, first :: add_to_last ni rest)))) 
+  | e -> e
+and add_to_last protocol choices =
+  match choices with
+    | [] -> []
+    | [MessageG (msg, from_role, to_role, Empty)] -> [MessageG (msg, from_role, to_role, fix_merge_issues1 protocol)]
+    | (c :: cs) -> c :: add_to_last protocol cs *)
+
+
+let show1 = show
+    
+(* must take a global type *)
+(* let show1 _ = sprintf "hilo" *)
+
+(* -------------------------------------------------------------------------------------------------------------------------------------------------------------------- *)
+
+(* some utility functions *)
+let rec remove_last l = 
+  match l with
+    | [] -> failwith "rip"
+    | [_] -> []
+    | e :: es -> e :: remove_last es 
+
+let rec get_last l =
+  match l with
+    | [] -> failwith "rip"
+    | [e] -> e
+    | _ :: es -> get_last es
+
+let rec estimate_gp_size gp =
+  match gp with
+    | MessageG (_, _, _, rest) -> 1 + estimate_gp_size rest
+    | MuG (_, _, rest) -> 1 + estimate_gp_size rest
+    | TVarG (_, _, _) -> 1
+    | ChoiceG (_, choices) -> estimate_biggest_gp_size choices
+    | EndG -> 0
+    | CallG (_, _, _, rest) -> estimate_gp_size rest
+    | Empty -> 0
+and estimate_biggest_gp_size choices =
+  match choices with
+    | [] -> 0
+    | [e] -> estimate_gp_size e
+    | e :: es -> if estimate_gp_size e > estimate_biggest_gp_size es then estimate_gp_size e else estimate_biggest_gp_size es
+
+let rec get_shortest_gp choices = 
+  match choices with
+    | [] -> failwith "rip"
+    | [e] -> e
+    | e :: es -> if estimate_gp_size e > estimate_biggest_gp_size es then e else get_shortest_gp es
+
+let get_continuation gp = 
+  match gp with
+    | MessageG (_, _, _, rest) -> rest
+    | e -> e
+
+let add_continuation crash_branch continuation_to_add = 
+  match crash_branch with
+    | MessageG (msg, from_role, to_role, _) -> MessageG (msg, from_role, to_role, continuation_to_add)
+    | e -> e
+
+(* this function dispatches to a helper function that takes in the choices as a list *)
+let rec add_shortest_continuation_to_crash_branch choice = 
+  match choice with 
+    | ChoiceG (role, choices) -> ChoiceG (role, add_shortest_continuation_to_crash_branch' choices)
+    | e -> e
+
+(* this function takes the list of choices, finds the shortest continuation of the non crash branches, and adds it to the crash branch *)
+and add_shortest_continuation_to_crash_branch' choices =
+  let non_crash_branches = remove_last choices in
+    let crash_branch = get_last choices in
+      let shortest_choice_branch = get_shortest_gp choices in
+        let shortest_choice_branch_continuation = get_continuation shortest_choice_branch in
+          let complete_crash_branch = add_continuation crash_branch shortest_choice_branch_continuation in
+            non_crash_branches @ complete_crash_branch :: []
+
+
+let rec add_continuations gp =
+  let participants = roles gp in
+  match gp with
+  | MessageG (msg, from_role, to_role, rest) -> MessageG (msg, from_role, to_role, add_continuations rest)
+  | MuG (type_var, rec_vars, rest) -> MuG (type_var, rec_vars, add_continuations rest)
+  | ChoiceG (role, choices) -> if (merge_roles choices participants) then ChoiceG (role, List.map choices ~f:add_continuations) else add_shortest_continuation_to_crash_branch (ChoiceG (role, List.map choices ~f:add_continuations)) 
+  | CallG (caller, protocol, participants, rest) -> CallG (caller, protocol, participants, add_continuations rest)
+  | e -> e
+
+
+(* -------------------------------------------------------------------------------------------------------------------------------------------------------------------- *)
+
+(* case method *)
+
+let rec add_graceful_failure gp =
+  let participants = roles gp in
+  add_continuations1 participants gp
+
+and add_continuations1 participants gp = 
+match gp with
+  | MessageG (msg, from_role, to_role, rest) -> MessageG (msg, from_role, to_role, add_continuations1 participants rest)
+  | MuG (type_var, rec_vars, rest) -> MuG (type_var, rec_vars, add_continuations1 participants rest)
+  | ChoiceG (role, choices) -> add_case_continuation_to_crash_branch (ChoiceG (role, List.map choices ~f:(add_continuations1 participants))) participants
+  | CallG (caller, protocol, participants, rest) -> CallG (caller, protocol, participants, add_continuations1 participants rest)
+  | e -> e
+
+and add_case_continuation_to_crash_branch choice participants =
+  match choice with
+  | ChoiceG (role, choices) -> ChoiceG(role, add_case_continuation_to_crash_branch' choices participants)
+  | e -> e
+  
+and add_case_continuation_to_crash_branch' choices participants =
+  let non_crash_branches = remove_last choices in
+    let crash_branch = get_last choices in
+      let relevant_participants = remove_participants (roles crash_branch) participants in (* remove A and B *)
+        let continuation_list = continuation_list crash_branch non_crash_branches relevant_participants in
+          let complete_crash_branch = append_continuation_list crash_branch continuation_list in
+            non_crash_branches @ complete_crash_branch :: []
+    
+and continuation_list crash_branch non_crash_branches participants =
+  match non_crash_branches with
+    | [] -> []
+    | e :: _ -> continuation_list' crash_branch e participants []
+
+and continuation_list' crash_branch non_crash_branch participants current_list =
+  match non_crash_branch with
+    | MessageG (msg, from_role, to_role, rest) -> continuation_list' crash_branch rest (remove_participants (from_role :: to_role :: []) participants) (current_list @ deal_with_msg (MessageG (msg, from_role, to_role, rest)) (crash_from crash_branch) (crash_to crash_branch) current_list)
+    | MuG (_, _, rest) -> continuation_list' crash_branch rest participants current_list
+    | ChoiceG (_, choices) -> (match choices with
+                                | [] -> []
+                                | e :: _ -> continuation_list' crash_branch e participants current_list)
+    | _ -> current_list
+
+and deal_with_msg msg crash_from crash_to current_list =
+  match msg with
+    | MessageG (_, from_role, to_role, _) -> if roles_equal from_role crash_from && roles_equal to_role crash_to
+                                              || roles_equal from_role crash_to && roles_equal to_role crash_from
+                                                then []
+                                              else if roles_equal from_role crash_from
+                                                then [MessageG ({label = LabelName.of_string "CRASH"; payload = []}, crash_from, to_role, Empty)]
+                                              else if roles_equal from_role crash_to
+                                                then [MessageG ({label = LabelName.of_string "EXIT"; payload = []}, crash_to, to_role, Empty)]
+                                              else if (role_name_elem from_role (List.concat (List.map current_list ~f:roles)))  
+                                                then [MessageG ({label = LabelName.of_string "EXIT"; payload = []}, from_role, to_role, Empty)]
+                                              else failwith "cannot generate mergable crash branch"
+    | _ -> []
+
+and remove_participants to_remove participants = 
+  match participants with
+    | [] -> []
+    | e :: es -> if (role_name_elem e to_remove) then remove_participants to_remove es else e :: remove_participants to_remove es
+
+and crash_from crash = 
+  match crash with
+    | MessageG (_, from_role, _, _) -> from_role
+    | _ -> failwith "crash_from failed"
+
+and crash_to crash = 
+  match crash with
+    | MessageG (_, _, to_role, _) -> to_role
+    | _ -> failwith "crash_from failed"
+
+and append_continuation_list crash_branch msgs =
+  match crash_branch with
+    | MessageG (msg, from_role, to_role, _) -> MessageG (msg, from_role, to_role, append_continuation_list' msgs)
+    | _ -> failwith "crash branch should be a message"
+
+and append_continuation_list' msgs =
+  match msgs with
+    | [] -> EndG
+    | e :: es -> (match e with
+                  | MessageG (msg, from_role, to_role, _) -> MessageG (msg, from_role, to_role, append_continuation_list' es)
+                  | _ -> failwith "this should be a message")
+                  
+(* -------------------------------------------------------------------------------------------------------------------------------------------------------------------- *)
+
+let rec remove_crash_branch gp =
+  match gp with
+  | ChoiceG (name, ts) -> (match ts with
+                            | [] -> failwith "this choice should at least 2 branches"
+                            | [_] -> failwith "this should have at least 2 branches"
+                            | e1 :: _ :: [] -> e1
+                            | es -> ChoiceG (name, remove_last es))
+  | _ -> failwith "this function should only be applied to choices"
+
+let rec trust_protocols trusted gp = 
+  match gp with
+    | MessageG (msg, sender, receiver, t) -> MessageG (msg, sender, receiver, trust_protocols trusted t)
+    | MuG (type_var, rec_vars, g) -> MuG (type_var, rec_vars, trust_protocols trusted g)
+    | ChoiceG (name, ts) -> if (role_name_elem name trusted) then remove_crash_branch (ChoiceG (name, (List.map ts ~f:(trust_protocols trusted)))) else ChoiceG (name, (List.map ts ~f:(trust_protocols trusted)))
+    | CallG (caller, protocol, participants, t) -> CallG (caller, protocol, participants, trust_protocols trusted t)
+    | e -> e
+
+(* -------------------------------------------------------------------------------------------------------------------------------------------------------------------- *)
 
 let of_crash_safe_protocol (located_global_protocol : Syntax.raw_global_protocol located) =
   let gp = of_protocol located_global_protocol in
-    add_crash_branches (remove_redundant_choices (desugar gp))
+  let _ = add_broadcasts in
+  let _ = add_continuations in
+  let _ = add_graceful_failure in
+    (* add_broadcasts (add_crash_branches (remove_redundant_choices (desugar gp))) gp *)
+    trust_protocols (RoleName.of_string "Visa" :: RoleName.of_string "Bank" :: []) (add_graceful_failure (add_crash_branches (remove_redundant_choices (desugar gp))))
 
 let rec flatten = function
   | ChoiceG (role, choices) ->

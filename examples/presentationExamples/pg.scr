@@ -1,0 +1,10 @@
+global protocol pg(role Bank, role CardMachine, role Visa) {
+    TransactionDetails() from CardMachine to Bank;
+    TransactionDetails() from Bank to Visa;
+    RiskScore() from Visa to Bank;
+    choice at Bank {
+        ApproveTransaction() from Bank to CardMachine;
+    } or {
+        RejectTransaction() from Bank to CardMachine;
+    }
+}

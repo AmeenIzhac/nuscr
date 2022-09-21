@@ -77,6 +77,9 @@ type nested_t = nested_global_info Map.M(ProtocolName).t
 val show : t -> string
 (** Provides a textual representation of a global type *)
 
+val show1 : t -> string
+(** dw bout this one *)
+
 val show_nested_t : nested_t -> string
 (** Provides a textual representation of a global type with nested protocols *)
 

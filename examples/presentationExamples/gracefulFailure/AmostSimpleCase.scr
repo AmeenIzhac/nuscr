@@ -1,0 +1,7 @@
+global protocol AmostSimpleCase(role A, role B) {
+  choice at A {                         
+    MSG() from A to B;
+  } or {
+    CRASH() from A to B;
+  }
+}

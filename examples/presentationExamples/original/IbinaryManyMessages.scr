@@ -1,0 +1,13 @@
+global protocol IbinaryManyMessages(role A, role B)
+{
+    MSG1() from A to B;
+    MSG2() from A to B;
+    MSG3() from A to B;
+    MSG4() from A to B;
+    MSG5() from A to B;
+    MSG6() from A to B;
+    MSG7() from A to B;
+    MSG8() from A to B;
+    MSG9() from A to B;
+    MSG10() from A to B;
+}

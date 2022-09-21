@@ -1,0 +1,15 @@
+global protocol Hambiguous(role A, role B, role C, role D)
+{
+    choice at A {
+        MSG1() from A to C;
+        MSG2() from B to C;
+        MSG3() from B to D;
+        MSG4() from A to B;
+        MSG5() from B to C;
+    } or {
+        CRASH() from A to C;
+        MSG2() from B to C;
+        MSG3() from B to D;
+        EXIT() from A to B;
+    }
+}

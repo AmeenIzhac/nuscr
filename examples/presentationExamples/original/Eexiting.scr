@@ -1,0 +1,5 @@
+global protocol Eexiting(role A, role B, role C) 
+{
+    MSG1() from A to B;
+    MSG2() from B to C;
+}

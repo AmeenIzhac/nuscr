@@ -1,0 +1,10 @@
+global protocol Cchoice(role A, role B) 
+{
+choice at A {                         
+  MSG1() from A to B;
+} or {
+  MSG2() from A to B;
+} or {
+  CRASH() from A to B;
+}
+}
