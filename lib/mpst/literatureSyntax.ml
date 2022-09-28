@@ -71,7 +71,6 @@ let rec from_gtype = function
           ; g_br_to= Option.value_exn receiver_role
           ; g_br_cont= List.rev conts } )
   | Gtype.CallG _ -> Err.unimpl ~here:[%here] "from_gtype: CallG"
-  | Gtype.Empty -> EndG
 
 let rec from_ltype = function
   | Ltype.RecvL (m, r_from, cont) ->

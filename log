@@ -1,0 +1,145 @@
+5.9604644775390625e-06
+5.0067901611328125e-06
+5.0067901611328125e-06
+5.0067901611328125e-06
+7.152557373046875e-06
+5.9604644775390625e-06
+5.0067901611328125e-06
+4.0531158447265625e-06
+5.0067901611328125e-06
+4.0531158447265625e-06
+File "lib/mpst/gtype.ml", line 782, characters 100-102:
+782 |       | MessageG (_, sender, receiver, t) -> if ((roles_equal p1 sender && roles_equal p2 receiver) or (roles_equal p1 receiver) && roles_equal p2 sender) then true else interacts_with p1 p2 t
+                                                                                                          ^^
+Error (alert deprecated): Base.or
+[2016-09] this element comes from the stdlib distributed with OCaml.
+There is not equivalent functionality in Base or Stdio at the moment,
+so you need to use [Caml.( or )] instead
+File "lib/mpst/gtype.ml", line 595, characters 4-13:
+595 | let mergeable tgp choice = 
+          ^^^^^^^^^
+Error (warning 32 [unused-value-declaration]): unused value mergeable.
+File "lib/mpst/gtype.ml", line 780, characters 10-24:
+780 |   let rec interacts_with p1 p2 gp = 
+                ^^^^^^^^^^^^^^
+Error (warning 32 [unused-value-declaration]): unused value interacts_with.
+File "lib/mpst/gtype.ml", line 782, characters 100-102:
+782 |       | MessageG (_, sender, receiver, t) -> if ((roles_equal p1 sender && roles_equal p2 receiver) or (roles_equal p1 receiver) && roles_equal p2 sender) then true else interacts_with p1 p2 t
+                                                                                                          ^^
+Error (alert deprecated): Base.or
+[2016-09] this element comes from the stdlib distributed with OCaml.
+There is not equivalent functionality in Base or Stdio at the moment,
+so you need to use [Caml.( or )] instead
+File "lib/mpst/gtype.ml", line 595, characters 4-13:
+595 | let mergeable tgp choice = 
+          ^^^^^^^^^
+Error (warning 32 [unused-value-declaration]): unused value mergeable.
+File "lib/mpst/gtype.ml", line 780, characters 10-24:
+780 |   let rec interacts_with p1 p2 gp = 
+                ^^^^^^^^^^^^^^
+Error (warning 32 [unused-value-declaration]): unused value interacts_with.
+File "lib/mpst/gtype.ml", line 782, characters 100-102:
+782 |       | MessageG (_, sender, receiver, t) -> if ((roles_equal p1 sender && roles_equal p2 receiver) or (roles_equal p1 receiver) && roles_equal p2 sender) then true else interacts_with p1 p2 t
+                                                                                                          ^^
+Error (alert deprecated): Base.or
+[2016-09] this element comes from the stdlib distributed with OCaml.
+There is not equivalent functionality in Base or Stdio at the moment,
+so you need to use [Caml.( or )] instead
+File "lib/mpst/gtype.ml", line 595, characters 4-13:
+595 | let mergeable tgp choice = 
+          ^^^^^^^^^
+Error (warning 32 [unused-value-declaration]): unused value mergeable.
+File "lib/mpst/gtype.ml", line 780, characters 10-24:
+780 |   let rec interacts_with p1 p2 gp = 
+                ^^^^^^^^^^^^^^
+Error (warning 32 [unused-value-declaration]): unused value interacts_with.
+File "lib/mpst/gtype.ml", line 782, characters 100-102:
+782 |       | MessageG (_, sender, receiver, t) -> if ((roles_equal p1 sender && roles_equal p2 receiver) or (roles_equal p1 receiver) && roles_equal p2 sender) then true else interacts_with p1 p2 t
+                                                                                                          ^^
+Error (alert deprecated): Base.or
+[2016-09] this element comes from the stdlib distributed with OCaml.
+There is not equivalent functionality in Base or Stdio at the moment,
+so you need to use [Caml.( or )] instead
+File "lib/mpst/gtype.ml", line 595, characters 4-13:
+595 | let mergeable tgp choice = 
+          ^^^^^^^^^
+Error (warning 32 [unused-value-declaration]): unused value mergeable.
+File "lib/mpst/gtype.ml", line 780, characters 10-24:
+780 |   let rec interacts_with p1 p2 gp = 
+                ^^^^^^^^^^^^^^
+Error (warning 32 [unused-value-declaration]): unused value interacts_with.
+File "lib/mpst/gtype.ml", line 782, characters 100-102:
+782 |       | MessageG (_, sender, receiver, t) -> if ((roles_equal p1 sender && roles_equal p2 receiver) or (roles_equal p1 receiver) && roles_equal p2 sender) then true else interacts_with p1 p2 t
+                                                                                                          ^^
+Error (alert deprecated): Base.or
+[2016-09] this element comes from the stdlib distributed with OCaml.
+There is not equivalent functionality in Base or Stdio at the moment,
+so you need to use [Caml.( or )] instead
+File "lib/mpst/gtype.ml", line 595, characters 4-13:
+595 | let mergeable tgp choice = 
+          ^^^^^^^^^
+Error (warning 32 [unused-value-declaration]): unused value mergeable.
+File "lib/mpst/gtype.ml", line 780, characters 10-24:
+780 |   let rec interacts_with p1 p2 gp = 
+                ^^^^^^^^^^^^^^
+Error (warning 32 [unused-value-declaration]): unused value interacts_with.
+File "lib/mpst/gtype.ml", line 782, characters 100-102:
+782 |       | MessageG (_, sender, receiver, t) -> if ((roles_equal p1 sender && roles_equal p2 receiver) or (roles_equal p1 receiver) && roles_equal p2 sender) then true else interacts_with p1 p2 t
+                                                                                                          ^^
+Error (alert deprecated): Base.or
+[2016-09] this element comes from the stdlib distributed with OCaml.
+There is not equivalent functionality in Base or Stdio at the moment,
+so you need to use [Caml.( or )] instead
+File "lib/mpst/gtype.ml", line 595, characters 4-13:
+595 | let mergeable tgp choice = 
+          ^^^^^^^^^
+Error (warning 32 [unused-value-declaration]): unused value mergeable.
+File "lib/mpst/gtype.ml", line 780, characters 10-24:
+780 |   let rec interacts_with p1 p2 gp = 
+                ^^^^^^^^^^^^^^
+Error (warning 32 [unused-value-declaration]): unused value interacts_with.
+File "lib/mpst/gtype.ml", line 782, characters 100-102:
+782 |       | MessageG (_, sender, receiver, t) -> if ((roles_equal p1 sender && roles_equal p2 receiver) or (roles_equal p1 receiver) && roles_equal p2 sender) then true else interacts_with p1 p2 t
+                                                                                                          ^^
+Error (alert deprecated): Base.or
+[2016-09] this element comes from the stdlib distributed with OCaml.
+There is not equivalent functionality in Base or Stdio at the moment,
+so you need to use [Caml.( or )] instead
+File "lib/mpst/gtype.ml", line 595, characters 4-13:
+595 | let mergeable tgp choice = 
+          ^^^^^^^^^
+Error (warning 32 [unused-value-declaration]): unused value mergeable.
+File "lib/mpst/gtype.ml", line 780, characters 10-24:
+780 |   let rec interacts_with p1 p2 gp = 
+                ^^^^^^^^^^^^^^
+Error (warning 32 [unused-value-declaration]): unused value interacts_with.
+File "lib/mpst/gtype.ml", line 782, characters 100-102:
+782 |       | MessageG (_, sender, receiver, t) -> if ((roles_equal p1 sender && roles_equal p2 receiver) or (roles_equal p1 receiver) && roles_equal p2 sender) then true else interacts_with p1 p2 t
+                                                                                                          ^^
+Error (alert deprecated): Base.or
+[2016-09] this element comes from the stdlib distributed with OCaml.
+There is not equivalent functionality in Base or Stdio at the moment,
+so you need to use [Caml.( or )] instead
+File "lib/mpst/gtype.ml", line 595, characters 4-13:
+595 | let mergeable tgp choice = 
+          ^^^^^^^^^
+Error (warning 32 [unused-value-declaration]): unused value mergeable.
+File "lib/mpst/gtype.ml", line 780, characters 10-24:
+780 |   let rec interacts_with p1 p2 gp = 
+                ^^^^^^^^^^^^^^
+Error (warning 32 [unused-value-declaration]): unused value interacts_with.
+File "lib/mpst/gtype.ml", line 782, characters 100-102:
+782 |       | MessageG (_, sender, receiver, t) -> if ((roles_equal p1 sender && roles_equal p2 receiver) or (roles_equal p1 receiver) && roles_equal p2 sender) then true else interacts_with p1 p2 t
+                                                                                                          ^^
+Error (alert deprecated): Base.or
+[2016-09] this element comes from the stdlib distributed with OCaml.
+There is not equivalent functionality in Base or Stdio at the moment,
+so you need to use [Caml.( or )] instead
+File "lib/mpst/gtype.ml", line 595, characters 4-13:
+595 | let mergeable tgp choice = 
+          ^^^^^^^^^
+Error (warning 32 [unused-value-declaration]): unused value mergeable.
+File "lib/mpst/gtype.ml", line 780, characters 10-24:
+780 |   let rec interacts_with p1 p2 gp = 
+                ^^^^^^^^^^^^^^
+Error (warning 32 [unused-value-declaration]): unused value interacts_with.

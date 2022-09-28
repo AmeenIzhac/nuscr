@@ -1,1 +1,7 @@
-rubbish
+    | MessageG (msg, sender, receiver, t) -> _
+    | MuG (type_var, rec_vars, g) -> _
+    | TVarG (type_var, exprs, g_lazy) -> _
+    | ChoiceG (name, ts) -> _
+    | EndG -> _
+    | CallG (caller, protocol, participants, t) -> _
+    | Empty -> _

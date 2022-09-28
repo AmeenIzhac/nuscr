@@ -1049,7 +1049,7 @@ end = struct
       zipped_roles
 
   let rec generate_channel_vars global_t protocol_lookup (env : t) = function
-    | (EndG | TVarG _ | Empty) -> env
+    | (EndG | TVarG _) -> env
     | MuG (_, _, gtype) ->
         generate_channel_vars global_t protocol_lookup env gtype
     | MessageG ({payload; _}, sender, recv, gtype) ->

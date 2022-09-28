@@ -382,7 +382,7 @@ let rec project' env (projected_role : RoleName.t) =
         (UnknownVariableValue (projected_role, Set.choose_exn unknown_vars))
   in
   function
-  | (EndG | Empty) -> EndL
+  | EndG -> EndL
   | TVarG (name, _, _) when Set.mem env.unguarded_tv name ->
       (* Type variable unguarded *)
       EndL

@@ -70,7 +70,7 @@ let ensure_unique_identifiers (global_t : Gtype.nested_t) =
   let validate_protocol ~key ~data protocol_names =
     let rec validate_protocol_msgs messages gtype =
       match gtype with
-      | (EndG | TVarG _ | Empty) -> messages
+      | (EndG | TVarG _) -> messages
       | MuG (_, _, g) | CallG (_, _, _, g) ->
           validate_protocol_msgs messages g
       | ChoiceG (_, gtypes) ->
@@ -965,7 +965,7 @@ let gen_setup_file protocol_setup_env imports indent setup_channels_impl
 
 (** Generate all the environment containing all the messages in a protocol *)
 let rec gen_message_label_enums msgs_env = function
-  | (EndG | TVarG _ | Empty) -> msgs_env
+  | (EndG | TVarG _) -> msgs_env
   | MuG (_, _, g) -> gen_message_label_enums msgs_env g
   | CallG (_, protocol, roles, g) ->
       let msgs_env =
