@@ -1,0 +1,22 @@
+Files Changed
+
+    bin/main.ml
+    lib/nuscr.ml
+    lib/mpst/gtype.ml - here is where the main implementation is, everything is between "module CrashPattern = struct" and "end include CrashPattern"
+    lib/mpst/gtype.mli
+    lib/nuscrlib.ml
+    lib/nuscrlib.mli
+    /examples  
+
+Commands
+    to run the 
+    dune exec nuscr -- --shortest-branch-failure=SimpleConsensus examples/presentationExamples/annot/SimpleConsensus.scr
+    
+    to run the graceful failure generator you can use:
+        "dune exec nuscr -- --graceful-failure=<protocol_name> <filepath> 
+    for example:
+        dune exec nuscr -- --graceful-failure=AmostSimpleCase examples/presentationExamples/original/AmostSimpleCase.scr
+    this will paste the output in the command line as well as output it to the file examples/CrashPatternOutput.scr
+    
+    i wasnt able to figure out how to use cmdliner so i have hardcoded a function "trust_protocols" that can be used to
+    specify protocols that can be trusted so do not need crash handling code generated for them

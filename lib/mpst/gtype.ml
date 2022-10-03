@@ -350,7 +350,7 @@ let of_protocol (global_protocol : Syntax.global_protocol) =
   | Some free_name -> uerr (UnboundRecursionName free_name)
   | None -> evaluate_lazy_gtype gtype
   
-module AmeensStuff = struct
+module CrashPattern = struct
 
 (* some variable naming i have used:
    t for type
@@ -360,6 +360,12 @@ module AmeensStuff = struct
    r for role
    p for participant (i should probably go rename all rs to ps or vice versa as they represent the same thing)
    c for choice *)
+
+(* gets the head of a list *)
+let head l =
+  match l with
+    | [] -> failwith "head failed: list was empty"
+    | e :: _ -> e
 
 (* remove_last removes the last item from a list *)
 let rec remove_last l = 
@@ -424,11 +430,20 @@ let type_vars_equal t1 t2 = if (TypeVariableName.compare t1 t2) = 0 then true el
 let rec roles t = nub_roles (roles' t)
   and roles' t =
     match t with
-      | MessageG (_, from_role, to_role, rest) -> from_role :: to_role :: roles' rest
-      | MuG (_, _, rest) -> roles' rest 
+      | MessageG (_, from_role, to_role, t) -> from_role :: to_role :: roles' t
+      | MuG (_, _, t) -> roles' t 
       | ChoiceG (role, choices) -> role :: List.concat (List.map choices ~f:roles')
       | CallG (_, _, roles, _) -> roles
       | _ -> []
+
+(* apply_to_every_choice will take a function f, recurse through a type t and apply the f to every choice in t *)
+let rec apply_to_every_choice f t =
+  match t with
+    | MessageG (msg, sender, receiver, t) -> MessageG (msg, sender, receiver, apply_to_every_choice f t) 
+    | MuG (type_var, rec_vars, g) -> MuG (type_var, rec_vars, apply_to_every_choice f g)
+    | ChoiceG (name, ts) -> f (ChoiceG (name, List.map ts ~f:(apply_to_every_choice f)))
+    | CallG (caller, protocol, participants, t) -> CallG (caller, protocol, participants, apply_to_every_choice f t)
+    | e -> e
 
 (* desguar takes all messages and turns them into choices so that we can add crash handling branches to them easily.
    desugar is not clever so will create redundant choices *)
@@ -520,7 +535,7 @@ let rec get_makeshift_local_type p t =
    the global protocol as a parameter to search for the definition *)
 let rec get_type_def type_var t =
   match t with
-    | MessageG (_, _, _, rest) -> get_type_def type_var rest
+    | MessageG (_, _, _, t) -> get_type_def type_var t
     | MuG (type_var, type_var_list, def) -> 
       if type_vars_equal type_var type_var then
         MuG (type_var, type_var_list, def)
@@ -602,16 +617,25 @@ let mergeable gp choice =
           foldl (&&) true (List.map all_pairs ~f:(pair_mergeable gp))
       | _ -> failwith "mergeable failed: expected a ChoiceG"
     
+(* let involved_with p gp = 
+  match gp with
+    | MessageG (_, _, _, t) -> 1 + msg_cnt t
+    | MuG (_, _, t) -> msg_cnt t
+    | TVarG (_, _, _) -> 0
+    | ChoiceG (_, choices) -> biggest_msg_cnt choices
+    | EndG -> 0
+    | CallG (_, _, _, t) -> msg_cnt t *)
+
 
 (* msg_cnt returns the number of messages in a global protocol *)
 let rec msg_cnt t =
   match t with
-    | MessageG (_, _, _, rest) -> 1 + msg_cnt rest
-    | MuG (_, _, rest) -> msg_cnt rest
+    | MessageG (_, _, _, t) -> 1 + msg_cnt t
+    | MuG (_, _, t) -> msg_cnt t
     | TVarG (_, _, _) -> 0
     | ChoiceG (_, choices) -> biggest_msg_cnt choices
     | EndG -> 0
-    | CallG (_, _, _, rest) -> msg_cnt rest
+    | CallG (_, _, _, t) -> msg_cnt t
 and biggest_msg_cnt choices =
   match choices with
     | [] -> 0
@@ -628,13 +652,17 @@ let rec get_shortest_branch choices =
     | [e] -> e
     | e :: e' :: es -> if msg_cnt e < msg_cnt e' then get_shortest_branch (e :: es) else get_shortest_branch (e' :: es)
 
-(* extend takes a list of branches, determines which branch has the shortest 
-   continuation (by continuation i mean what comes after the first message in the branch), and appends the shortest
-   continuation to the crash message in the crash branch *)
-let rec extend choice = 
-  match choice with 
-    | ChoiceG (role, choices) -> ChoiceG (role, extend' choices)
-    | e -> e
+    
+(* add_shortest_branch_failure takes a global protocol and applies extend to every choice *)
+let rec add_shortest_branch_failure gp =
+  apply_to_every_choice (extend gp) gp
+  (* extend takes a list of branches, determines which branch has the shortest continuation (by continuation i mean what 
+    comes after the first message in the branch), and appends the shortest continuation to the crash message in the crash 
+    branch *)
+  and extend gp choice = 
+    match choice with
+      | ChoiceG (name, ts) -> if (mergeable gp choice) then choice else ChoiceG (name, extend' ts)
+      | _ -> failwith "extend failed: expected ChoiceG"
   and extend' choices =
     let non_crash_branches = remove_last choices in
       let crash_branch = get_last choices in
@@ -642,78 +670,127 @@ let rec extend choice =
           let shortest_choice_branch_continuation = get_continuation shortest_choice_branch in
             let complete_crash_branch = add_continuation crash_branch shortest_choice_branch_continuation in
               non_crash_branches @ complete_crash_branch :: []
-
-(* add continuations takes a global protocol and applies add_shortest_continuation_tO_crash_branch to every choice *)
-let rec add_continuations gp t =
-    match t with
-      | MessageG (msg, from_role, to_role, rest) -> MessageG (msg, from_role, to_role, add_continuations gp rest)
-      | MuG (type_var, rec_vars, rest) -> MuG (type_var, rec_vars, add_continuations gp rest)
-      | ChoiceG (role, choices) -> 
-        if (mergeable gp (ChoiceG (role, choices))) then 
-          ChoiceG (role, List.map choices ~f:(add_continuations gp)) 
-        else 
-          extend (ChoiceG (role, List.map choices ~f:(add_continuations gp))) 
-      | CallG (caller, protocol, participants, rest) -> CallG (caller, protocol, participants, add_continuations gp rest)
-      | e -> e
-
-(* add_graceful failure is just a wrapper around extend1 which implements graceful failure *)
+          
+(* add_local_graceful_failure takes in a protocol and outputs a protocol with local graceful failure *)  
 let rec add_graceful_failure t =
-  let participants = roles t in
-  extend participants t
-  (* extend1 takes a global protocol and applies extend' to every choice *)
-  and extend participants t = 
-  match t with
-    | MessageG (msg, from_role, to_role, rest) -> MessageG (msg, from_role, to_role, extend participants rest)
-    | MuG (type_var, rec_vars, rest) -> MuG (type_var, rec_vars, extend participants rest)
-    | ChoiceG (role, choices) -> 
-      let new_choice = (ChoiceG (role, List.map choices ~f:(extend participants))) in
-        extend' new_choice participants
-    | CallG (caller, protocol, participants, rest) -> 
-      CallG (caller, protocol, participants, extend participants rest)
-    | e -> e
-  (* extend' just dispatches to extend'' as we need the
-      parameter type to be a t list rather than a ChoiceG *)
-  and extend' choice participants =
+  add_graceful_failure' t t
+  and add_graceful_failure' gp t =
+    let ps = roles t in
+      apply_to_every_choice (extend gp ps) t
+    and extend gp ps choice =
+      match choice with
+        | ChoiceG (name, ts) -> 
+          let non_crash_branches = remove_last ts in
+            let crash_branch = get_last ts in
+              let relevant_participants = remove_participants (roles crash_branch) ps in
+                let non_crash_branch = head non_crash_branches in
+                  let crash_continuation = continuation gp crash_branch non_crash_branch relevant_participants [] in
+                    let complete_crash_branch = append_continuation crash_branch crash_continuation in
+                      ChoiceG (name, non_crash_branches @ complete_crash_branch :: [])
+        | _ -> failwith "extend failed: expected ChoiceG"
+
+  and continuation gp crash_branch non_crash_branch ps current_continuation =
+    match non_crash_branch with
+      | MessageG (msg, from_role, to_role, t) -> 
+        if (role_elem from_role ps || role_elem to_role ps) then
+          let ps = remove_participants (from_role :: to_role :: []) ps in
+            let (cf, ct) = (crash_from crash_branch, crash_to crash_branch) in
+              let addition = deal_with_msg (MessageG (msg, from_role, to_role, t)) cf ct current_continuation in
+                let updated_continuation = current_continuation @ addition in
+                  continuation gp crash_branch t ps updated_continuation
+        else
+          continuation gp crash_branch t ps current_continuation
+      | MuG (_, _, t) -> continuation gp crash_branch t ps current_continuation
+      | ChoiceG (_, choices) -> 
+        (match choices with
+          | [] -> []
+          | e :: _ -> continuation gp crash_branch e ps current_continuation)
+      | TVarG (type_var, _, _) -> continuation gp crash_branch (sterilize (get_type_def type_var gp)) ps current_continuation
+      | _ -> current_continuation
+
+  and deal_with_msg msg crash_from crash_to current_continuation =
+    match msg with
+      | MessageG (_, from_role, to_role, _) -> 
+        if roles_equal from_role crash_from && roles_equal to_role crash_to
+        || roles_equal from_role crash_to && roles_equal to_role crash_from
+          then []
+        else if roles_equal from_role crash_from
+          then [MessageG ({label = LabelName.of_string "CRASH"; payload = []}, crash_from, to_role, EndG)]
+        else if roles_equal from_role crash_to
+          then [MessageG ({label = LabelName.of_string "EXIT"; payload = []}, crash_to, to_role, EndG)]
+        else if (role_elem from_role (List.concat (List.map current_continuation ~f:roles)))  
+          then [MessageG ({label = LabelName.of_string "EXIT"; payload = []}, from_role, to_role, EndG)]
+        else failwith "deal_with_msg failed: cannot generate mergable crash branch"
+      | _ -> failwith "deal_with_msg crashed: expected MessageG"
+
+  and remove_participants to_remove participants = 
+    match participants with
+      | [] -> []
+      | e :: es -> 
+        if (role_elem e to_remove) then 
+          remove_participants to_remove es 
+        else 
+          e :: remove_participants to_remove es
+
+  and crash_from crash = 
+    match crash with
+      | MessageG (_, from_role, _, _) -> from_role
+      | _ -> failwith "crash_from failed: expected a MessageG"
+
+  and crash_to crash = 
+    match crash with
+      | MessageG (_, _, to_role, _) -> to_role
+      | _ -> failwith "crash_to failed: expected a MessageG"
+
+  and append_continuation crash_branch msgs =
+    match crash_branch with
+      | MessageG (msg, from_role, to_role, _) -> MessageG (msg, from_role, to_role, append_continuation' msgs)
+      | _ -> failwith "append_continuation failed: expected a MessageG"
+
+  and append_continuation' msgs =
+    match msgs with
+      | [] -> EndG
+      | e :: es -> (match e with
+                    | MessageG (msg, from_role, to_role, _) -> 
+                      MessageG (msg, from_role, to_role, append_continuation' es)
+                    | _ -> failwith "append_continuation failed: expected a MessageG")
+         
+(* add_local_graceful_failure takes in a protocol and outputs a protocol with local graceful failure *)
+let rec add_local_graceful_failure t =
+  add_local_graceful_failure' t t
+  and add_local_graceful_failure' gp t =
+    let ps = roles t in
+      apply_to_every_choice (extend1 gp ps) t
+  and extend1 gp ps choice = 
     match choice with
-    | ChoiceG (role, choices) -> ChoiceG(role, extend'' choices participants)
-    | e -> e
-  
-(* extend'' adds graceful crash stop failure to each crash branch as a series
-    of steps. firstly separating the crash branch from the rest, then determining which participants are "relevant"
-    i.e. require merging, then using the other branches to determine what messages need to be added to the crash
-    branch and collecting them in "continuation list", and then finall appending these messages to the CRASH() message
-    and then appending the new "complete_crash_branch" to the other branches *)
-and extend'' choices participants =
-  let non_crash_branches = remove_last choices in
-    let crash_branch = get_last choices in
-      let relevant_participants = remove_participants (roles crash_branch) participants in (* remove A and B *)
-        let continuation = continuation crash_branch non_crash_branches relevant_participants in
-          let complete_crash_branch = append_continuation crash_branch continuation in
-            non_crash_branches @ complete_crash_branch :: []
-
-and continuation crash_branch non_crash_branches participants =
-  match non_crash_branches with
-    | [] -> []
-    (* here we only need to consider one of the alternative branches to know how to merge the crash branch
-        as we know the other branches merge with each other so consist of similar communications *)
-    | e :: _ -> continuation' crash_branch e participants []
-
-and continuation' crash_branch non_crash_branch participants current_continuation =
-  match non_crash_branch with
-    | MessageG (msg, from_role, to_role, rest) -> 
-      let ps = remove_participants (from_role :: to_role :: []) participants in
-        let (cf, ct) = (crash_from crash_branch, crash_to crash_branch) in
-          let additions = deal_with_msg (MessageG (msg, from_role, to_role, rest)) cf ct current_continuation in
-            let updated_continuation = current_continuation @ additions in
-              continuation' crash_branch rest ps updated_continuation
-    | MuG (_, _, rest) -> continuation' crash_branch rest participants current_continuation
-    | ChoiceG (_, choices) -> 
-      (match choices with
-        | [] -> []
-        | e :: _ -> continuation' crash_branch e participants current_continuation)
-    | _ -> current_continuation
-
-and deal_with_msg msg crash_from crash_to current_continuation =
+      | ChoiceG (name, ts) -> 
+        let non_crash_branches = remove_last ts in
+          let crash_branch = get_last ts in
+            let relevant_participants = remove_participants (roles crash_branch) ps in
+              let non_crash_branch = head non_crash_branches in
+                let crash_continuation = continuation1 gp crash_branch non_crash_branch relevant_participants [] in
+                  let complete_crash_branch = append_continuation crash_branch crash_continuation in
+                    ChoiceG (name, non_crash_branches @ complete_crash_branch :: [])
+      | _ -> failwith "extend failed: expected ChoiceG"
+  and continuation1 gp crash_branch non_crash_branch ps current_continuation =
+    match non_crash_branch with
+      | MessageG (msg, from_role, to_role, t) -> 
+        if (role_elem from_role ps || role_elem to_role ps) then
+          let ps = remove_participants (from_role :: to_role :: []) ps in
+            let (cf, ct) = (crash_from crash_branch, crash_to crash_branch) in
+              let addition = deal_with_msg1 (MessageG (msg, from_role, to_role, t)) cf ct current_continuation in
+                let updated_continuation = current_continuation @ addition in
+                  continuation1 gp crash_branch t ps updated_continuation
+        else
+          continuation1 gp crash_branch t ps current_continuation
+      | MuG (_, _, t) -> continuation1 gp crash_branch t ps current_continuation
+      | ChoiceG (_, choices) -> 
+        (match choices with
+          | [] -> []
+          | e :: _ -> continuation1 gp crash_branch e ps current_continuation)
+      | TVarG (type_var, _, _) -> continuation gp crash_branch (sterilize (get_type_def type_var gp)) ps current_continuation
+      | _ -> current_continuation
+  and deal_with_msg1 msg crash_from crash_to current_continuation =
   match msg with
     | MessageG (_, from_role, to_role, _) -> 
       if roles_equal from_role crash_from && roles_equal to_role crash_to
@@ -726,40 +803,9 @@ and deal_with_msg msg crash_from crash_to current_continuation =
       else if (role_elem from_role (List.concat (List.map current_continuation ~f:roles)))  
         then [MessageG ({label = LabelName.of_string "EXIT"; payload = []}, from_role, to_role, EndG)]
       else failwith "deal_with_msg failed: cannot generate mergable crash branch"
-    | _ -> []
+    | _ -> failwith "deal_with_msg1 crashed: expected MessageG"
 
-and remove_participants to_remove participants = 
-  match participants with
-    | [] -> []
-    | e :: es -> 
-      if (role_elem e to_remove) then 
-        remove_participants to_remove es 
-      else 
-        e :: remove_participants to_remove es
 
-and crash_from crash = 
-  match crash with
-    | MessageG (_, from_role, _, _) -> from_role
-    | _ -> failwith "crash_from failed: expected a MessageG"
-
-and crash_to crash = 
-  match crash with
-    | MessageG (_, _, to_role, _) -> to_role
-    | _ -> failwith "crash_to failed: expected a MessageG"
-
-and append_continuation crash_branch msgs =
-  match crash_branch with
-    | MessageG (msg, from_role, to_role, _) -> MessageG (msg, from_role, to_role, append_continuation' msgs)
-    | _ -> failwith "append_continuation failed: expected a MessageG"
-
-and append_continuation' msgs =
-  match msgs with
-    | [] -> EndG
-    | e :: es -> (match e with
-                  | MessageG (msg, from_role, to_role, _) -> 
-                    MessageG (msg, from_role, to_role, append_continuation' es)
-                  | _ -> failwith "append_continuation failed: expected a MessageG")
-         
 (* remove_crash_branch simply drops the last (crash) branch from a choice *)
 let rec remove_crash_branch t =
   match t with
@@ -783,25 +829,43 @@ let rec trust_protocols trusted t =
     | CallG (caller, protocol, participants, t) -> CallG (caller, protocol, participants, trust_protocols trusted t)
     | e -> e
 
-  let of_crash_safe_protocol located_global_protocol =
-    (* there are functions such as mergeable that i wrote and ended up not needing however they are useful functions
-       so i didnt delete them however the compiler complains that they are not used so i just "use" them below to
-       avoid the compilers complaints *)
-    let _ = mergeable in
-      let _ = add_continuations in
-        let _ = add_graceful_failure in
-          let begin_time = Unix.gettimeofday () in
-            let gp = of_protocol located_global_protocol in
-              let all_messages_as_choice = remove_redundant_choices (desugar gp) in
-                let all_choices_with_crash = add_crash_branches all_messages_as_choice in
-                  let graceful_failure = add_graceful_failure all_choices_with_crash in
-                    let result = trust_protocols [] graceful_failure in
-                      let finish_time = Unix.gettimeofday () in
-                        Stdio.prerr_endline (Float.to_string (finish_time -. begin_time)) ;
-                          result 
+(* this function dispatches for each pattern to call all the relevant stages of generating the output *)
+let apply_pattern pattern located_global_protocol =
+  let begin_time = Unix.gettimeofday () in
+    let gp = of_protocol located_global_protocol in
+      let all_messages_as_choice = remove_redundant_choices (desugar gp) in
+        let all_choices_with_crash = add_crash_branches all_messages_as_choice in
+          let pattern_applied = pattern all_choices_with_crash in
+            let result = trust_protocols [] pattern_applied in 
+              let finish_time = Unix.gettimeofday () in
+                Stdio.prerr_endline ("Run Time (s): " ^ (Float.to_string (finish_time -. begin_time))) ;
+                  let file = "examples/crashPatternOutput.scr" in
+                    let oc = Stdio.Out_channel.create file in
+                      Stdio.Out_channel.output_string oc (show result) ; result 
+
+(* shortest_branch_failure is the function used by nuscrlib to generate an earlier consideration for
+   how to fail gracefully in which we simply copy the shortest alternative branch as the continuation in
+   the crash branch. this will output to ther terminal as well as examples/crashPatternOutput.scr *)
+let shortest_branch_failure located_global_protocol =
+  apply_pattern add_shortest_branch_failure located_global_protocol
+
+(* graceful_failure is the function used by nuscrlib to generate graceful failure for a protocol and 
+   output it to the terminal as well as examples/crashPatternOutput.scr*)
+let empty_crash_branch located_global_protocol =
+  apply_pattern Fn.id located_global_protocol
+
+(* graceful_failure is the function used by nuscrlib to generate graceful failure for a protocol and 
+   output it to the terminal as well as examples/crashPatternOutput.scr*)
+let graceful_failure located_global_protocol =
+  apply_pattern add_graceful_failure located_global_protocol
+
+(* graceful_failure is the function used by nuscrlib to generate graceful failure for a protocol and 
+  output it to the terminal as well as examples/crashPatternOutput.scr*)
+let local_graceful_failure located_global_protocol =
+  apply_pattern add_local_graceful_failure located_global_protocol
 
   end
-include AmeensStuff
+include CrashPattern
 
 let rec flatten = function
   | ChoiceG (role, choices) ->

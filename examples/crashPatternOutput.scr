@@ -1,0 +1,16 @@
+choice at A {
+  MSG1() from A to B;
+  choice at B {
+    MSG2() from B to C;
+    choice at B {
+      MSG3() from B to C;
+    } or {
+      CRASH() from B to C;
+    }
+  } or {
+    CRASH() from B to C;
+  }
+} or {
+  CRASH() from A to B;
+  EXIT() from B to C;
+}

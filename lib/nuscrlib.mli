@@ -44,9 +44,21 @@ val get_global_type : scr_module -> protocol:ProtocolName.t -> Gtype.t
 (** [get_global_type module ~protocol] gets the corresponding global type for
     a protocol in a module *)
 
-    val get_global_type1 : scr_module -> protocol:ProtocolName.t -> Gtype.t
+val shortest_branch_failure : scr_module -> protocol:ProtocolName.t -> Gtype.t
 (** [get_global_type module ~protocol] gets the corresponding global type for
-    a protocol in a module *)
+    a protocol in a module with shortest branch failure crash stop handling *)
+
+val empty_crash_branch : scr_module -> protocol:ProtocolName.t -> Gtype.t
+(** [get_global_type module ~protocol] gets the corresponding global type for
+    a protocol in a module with graceful failure crash stop handling *)
+
+val graceful_failure : scr_module -> protocol:ProtocolName.t -> Gtype.t
+(** [get_global_type module ~protocol] gets the corresponding global type for
+    a protocol in a module with graceful failure crash stop handling *)
+
+val local_graceful_failure : scr_module -> protocol:ProtocolName.t -> Gtype.t
+(** [get_global_type module ~protocol] gets the corresponding global type for
+    a protocol in a module with local graceful failure crash stop handling *)
 
 val get_global_type_literature_syntax :
   scr_module -> protocol:ProtocolName.t -> LiteratureSyntax.global

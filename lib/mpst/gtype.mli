@@ -87,8 +87,17 @@ val call_label :
 val of_protocol : global_protocol -> t
 (** Turn a raw protocol (from the parser) into a global type. *)
 
-val of_crash_safe_protocol : global_protocol -> t
-(** Turn a raw protocol (from the parser) into a global type with crash handling. *)
+val shortest_branch_failure : global_protocol -> t
+(** Turn a raw protocol (from the parser) into a global type with shortest branch crash handling. *)
+
+val empty_crash_branch : global_protocol -> t
+(** Turn a raw protocol (from the parser) into a global type with graceful failure crash handling. *)
+
+val graceful_failure : global_protocol -> t
+(** Turn a raw protocol (from the parser) into a global type with graceful failure crash handling. *)
+
+val local_graceful_failure : global_protocol -> t
+(** Turn a raw protocol (from the parser) into a global type with local graceful failure crash handling. *)
 
 val nested_t_of_module : scr_module -> nested_t
 (** Turn scribble module (from the parser) into a nested global type *)

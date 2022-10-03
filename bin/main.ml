@@ -35,7 +35,7 @@ let gen_output ast f = function
 
 let main file enumerate verbose go_path out_dir project fsm gencode_ocaml
     gencode_monadic_ocaml gencode_go gencode_fstar sexp_global_type
-    show_global_type show_global_type1 show_solver_queries show_global_type_mpstk project_mpstk
+    show_global_type shortest_branch_failure empty_crash_branch graceful_failure local_graceful_failure show_solver_queries show_global_type_mpstk project_mpstk
     show_global_type_tex project_tex =
   Pragma.set_solver_show_queries show_solver_queries ;
   Pragma.set_verbose verbose ;
@@ -139,9 +139,33 @@ let main file enumerate verbose go_path out_dir project fsm gencode_ocaml
       Option.iter
         ~f:(fun protocol ->
           let protocol = ProtocolName.of_string protocol in
-          let gtype = Nuscrlib.get_global_type1 ~protocol ast in
+          let gtype = Nuscrlib.shortest_branch_failure ~protocol ast in
           Nuscrlib.Gtype.show gtype |> print_endline )
-        show_global_type1
+        shortest_branch_failure
+    in
+    let () =
+      Option.iter
+        ~f:(fun protocol ->
+          let protocol = ProtocolName.of_string protocol in
+          let gtype = Nuscrlib.empty_crash_branch ~protocol ast in
+          Nuscrlib.Gtype.show gtype |> print_endline )
+        empty_crash_branch
+    in
+    let () =
+      Option.iter
+        ~f:(fun protocol ->
+          let protocol = ProtocolName.of_string protocol in
+          let gtype = Nuscrlib.graceful_failure ~protocol ast in
+          Nuscrlib.Gtype.show gtype |> print_endline )
+        graceful_failure
+    in
+    let () =
+      Option.iter
+        ~f:(fun protocol ->
+          let protocol = ProtocolName.of_string protocol in
+          let gtype = Nuscrlib.local_graceful_failure ~protocol ast in
+          Nuscrlib.Gtype.show gtype |> print_endline )
+        local_graceful_failure
     in
     let () =
       Option.iter
@@ -308,15 +332,43 @@ let show_global_type =
     value
     & opt (some string) None
     & info ["show-global-type"] ~doc ~docv:"PROTO" )
+    
+let shortest_branch_failure =
+    let doc =
+      "Prints and outputs to examples/crashPatternOutput.scr the shortest branch failure for the specified protocol. <protocol_name>"
+    in
+    Arg.(
+      value
+      & opt (some string) None
+      & info ["shortest-branch-failure"] ~doc ~docv:"PROTO" )
 
-let show_global_type1 =
+let empty_crash_branch =
   let doc =
-    "Print the global type1 for the specified protocol. <protocol_name>"
+    "Prints and outputs to examples/crashPatternOutput.scr the protocol with generated empty crash branches for the specified protocol. <protocol_name>"
   in
   Arg.(
     value
     & opt (some string) None
-    & info ["show-global-type1"] ~doc ~docv:"PROTO" )
+    & info ["empty-crash-branch"] ~doc ~docv:"PROTO" )
+
+let graceful_failure =
+  let doc =
+    "Prints and outputs to examples/crashPatternOutput.scr the graceful failure for the specified protocol. <protocol_name>"
+  in
+  Arg.(
+    value
+    & opt (some string) None
+    & info ["graceful-failure"] ~doc ~docv:"PROTO" )
+
+let local_graceful_failure =
+  let doc =
+    "Prints and outputs to examples/crashPatternOutput.scr the local graceful failure for the specified protocol. <protocol_name>"
+  in
+  Arg.(
+    value
+    & opt (some string) None
+    & info ["local-graceful-failure"] ~doc ~docv:"PROTO" )
+
 
 let show_global_type_mpstk =
   let doc =
@@ -373,7 +425,8 @@ let cmd =
       ret
         ( const main $ file $ enumerate $ verbose $ go_path $ out_dir
         $ project $ fsm $ gencode_ocaml $ gencode_monadic_ocaml $ gencode_go
-        $ gencode_fstar $ sexp_global_type $ show_global_type $ show_global_type1 
+        $ gencode_fstar $ sexp_global_type $ show_global_type $ shortest_branch_failure
+        $ empty_crash_branch $ graceful_failure $ local_graceful_failure
         $ show_solver_queries $ show_global_type_mpstk $ project_mpstk
         $ show_global_type_tex $ project_tex ) )
   in
