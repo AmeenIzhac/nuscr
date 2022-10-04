@@ -4,13 +4,44 @@ choice at A {
     MSG2() from B to C;
     choice at B {
       MSG3() from B to C;
+      choice at C {
+        MSG4() from C to D;
+        choice at D {
+          MSG5() from D to C;
+        } or {
+          CRASH() from D to C;
+        }
+      } or {
+        CRASH() from C to D;
+      }
     } or {
       CRASH() from B to C;
+      EXIT() from C to D;
+    }
+  } or {
+    MSG6() from B to C;
+    choice at B {
+      MSG7() from B to C;
+      choice at C {
+        MSG8() from C to D;
+        choice at C {
+          MSG9() from C to D;
+        } or {
+          CRASH() from C to D;
+        }
+      } or {
+        CRASH() from C to D;
+      }
+    } or {
+      CRASH() from B to C;
+      EXIT() from C to D;
     }
   } or {
     CRASH() from B to C;
+    EXIT() from C to D;
   }
 } or {
   CRASH() from A to B;
   EXIT() from B to C;
+  EXIT() from C to D;
 }
