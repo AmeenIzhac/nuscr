@@ -666,7 +666,7 @@ let rec add_shortest_branch_failure gp =
   and extend' choices =
     let non_crash_branches = remove_last choices in
       let crash_branch = get_last choices in
-        let shortest_choice_branch = get_shortest_branch choices in
+        let shortest_choice_branch = get_shortest_branch (remove_last choices) in
           let shortest_choice_branch_continuation = get_continuation shortest_choice_branch in
             let complete_crash_branch = add_continuation crash_branch shortest_choice_branch_continuation in
               non_crash_branches @ complete_crash_branch :: []
