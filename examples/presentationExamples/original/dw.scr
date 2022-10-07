@@ -1,0 +1,7 @@
+global protocol dw(role A1, role B1, role C1, role A2, role B2, role C2) {
+    MSG1() from A1 to B1;
+    MSG2() from B1 to C1;
+    MSG3() from A2 to B2;
+    MSG4() from B2 to C2;
+}
+

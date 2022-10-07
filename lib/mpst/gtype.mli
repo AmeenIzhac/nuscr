@@ -34,6 +34,7 @@ type rec_var =
 
 (** The type of global types. See also {!LiteratureSyntax.global} for a
     simpler syntax. *)
+
 type t =
   | MessageG of message * RoleName.t * RoleName.t * t
       (** [MessageG (msg, sender, receiver, t)] starts by sending message
@@ -60,6 +61,15 @@ type t =
           [protocol], inviting [participants] to carry out the roles in
           [protocol] (dynamic roles in nested protocols are not included) *)
 [@@deriving sexp_of]
+
+(* useful to copy for pattern matching on t
+   | MessageG (msg, sender, receiver, t) ->
+   | MuG (type_var, rec_vars, g) ->
+   | TVarG (type_var, exprs, g_lazy) ->
+   | ChoiceG (name, ts) ->
+   | EndG ->
+   | CallG (caller, protocol, participants, t) -> 
+    *)
 
 (** Mapping of protocol name to the roles ('static' participants, dynamic
     participants) participating in the protocol, the names of the nested
