@@ -445,13 +445,15 @@ let rec apply_to_every_choice f t =
     | CallG (caller, protocol, participants, t) -> CallG (caller, protocol, participants, apply_to_every_choice f t)
     | e -> e
 
+(* msg_sender takes a message and returns the sender *)
 let msg_sender msg = 
   match msg with
-    | MessageG (_, sender, _, _) -> sender
-    | ChoiceG (name, _) -> name
-    | EndG -> failwith "dw"
-    | _ -> failwith "msg_sender failed: expected a MessageG or ChoiceG"
+  | MessageG (_, sender, _, _) -> sender
+  | ChoiceG (name, _) -> name
+  | EndG -> failwith "dw"
+  | _ -> failwith "msg_sender failed: expected a MessageG or ChoiceG"
   
+  (* msg_sender takes a message and returns the receiver *)
   let msg_receiver msg = 
   match msg with
     | MessageG (_, _, receiver, _) -> receiver
@@ -524,6 +526,7 @@ let rec all_pairings l =
     | [_] -> []
     | e :: es -> List.map es ~f:(make_tuple e) @ all_pairings es
     
+(* explained in get_makeshift_local_type' *)
 let rec get_makeshift_local_type' ps t =
 match t with
   | MessageG (msg, sender, receiver, t) -> 
@@ -579,34 +582,34 @@ and sterilize' type_var t =
     | CallG (caller, protocol, participants, t) -> CallG (caller, protocol, participants, sterilize' type_var t)
     | EndG -> EndG
     
-    (* pair_mergeable_on returns true if two types are mergeable for a particular participant *)
-    let rec pair_mergeable_on gp (t1, t2) p =
-      (* tlt here is similar to gp, tlt is for top local type i.e. the full protocol *)
-      let tlt = get_makeshift_local_type p gp in 
-        let lt1 = get_makeshift_local_type p t1 in
-          let lt2 = get_makeshift_local_type p t2 in
-            match (lt1, lt2) with
-              | MessageG (msg, sender, receiver, t), MessageG (msg', sender', receiver', t') ->
-                  (if labels_equal msg msg' && roles_equal sender sender' && roles_equal receiver receiver' then
-                      pair_mergeable_on gp (t, t') p
-                    else if roles_equal sender sender' && roles_equal p receiver && roles_equal p receiver' then
-                      true
-                    else
-                      false)
-              | ChoiceG (_, ts), other | other, ChoiceG (_, ts) -> pair_mergeable_on' gp (other, ts) p
-              | MuG (type_var, rec_vars, g), other | other, MuG (type_var, rec_vars, g) -> 
-                pair_mergeable_on tlt (sterilize (MuG (type_var, rec_vars, g)), other) p
-              | TVarG (type_var, _, _), other | other, TVarG (type_var, _, _) -> 
-                pair_mergeable_on tlt (sterilize (get_type_def type_var tlt), other) p
-              | EndG, EndG -> true
-              | _ -> false
-    
-      (* pair_mergeable_on' is just a helper for merging with all the branches of a choice *)
-      and pair_mergeable_on' gp (t, ts) p = 
-        match ts with
-          | [] -> failwith "pair_mergeable_on' failed: expected ChoiceG to have at least one branch"
-          | [t'] -> pair_mergeable_on gp (t, t') p
-          | t' :: ts' -> (pair_mergeable_on gp (t, t') p) && pair_mergeable_on' gp (t, ts') p
+(* pair_mergeable_on returns true if two types are mergeable for a particular participant *)
+let rec pair_mergeable_on gp (t1, t2) p =
+  (* tlt here is similar to gp, tlt is for top local type i.e. the full protocol *)
+  let tlt = get_makeshift_local_type p gp in 
+    let lt1 = get_makeshift_local_type p t1 in
+      let lt2 = get_makeshift_local_type p t2 in
+        match (lt1, lt2) with
+          | MessageG (msg, sender, receiver, t), MessageG (msg', sender', receiver', t') ->
+              (if labels_equal msg msg' && roles_equal sender sender' && roles_equal receiver receiver' then
+                  pair_mergeable_on gp (t, t') p
+                else if roles_equal sender sender' && roles_equal p receiver && roles_equal p receiver' then
+                  true
+                else
+                  false)
+          | ChoiceG (_, ts), other | other, ChoiceG (_, ts) -> pair_mergeable_on' gp (other, ts) p
+          | MuG (type_var, rec_vars, g), other | other, MuG (type_var, rec_vars, g) -> 
+            pair_mergeable_on tlt (sterilize (MuG (type_var, rec_vars, g)), other) p
+          | TVarG (type_var, _, _), other | other, TVarG (type_var, _, _) -> 
+            pair_mergeable_on tlt (sterilize (get_type_def type_var tlt), other) p
+          | EndG, EndG -> true
+          | _ -> false
+
+  (* pair_mergeable_on' is just a helper for merging with all the branches of a choice *)
+  and pair_mergeable_on' gp (t, ts) p = 
+    match ts with
+      | [] -> failwith "pair_mergeable_on' failed: expected ChoiceG to have at least one branch"
+      | [t'] -> pair_mergeable_on gp (t, t') p
+      | t' :: ts' -> (pair_mergeable_on gp (t, t') p) && pair_mergeable_on' gp (t, ts') p
 
 (* pair mergeable will determine whether a pair is mergeable for all participants. gp is the global
    protocol. we need carry around the full definition of the protocol for dealing with recursion *)
@@ -645,6 +648,8 @@ and biggest_msg_cnt choices =
                  else 
                    biggest_msg_cnt es
 
+(* remove_participants will take a list of participants as the first arguments to be removed from the list of
+   participants in the second argument and return the result *)
 let rec remove_participants to_remove participants = 
 match participants with
   | [] -> []
@@ -674,6 +679,7 @@ and involved_with'' gp ps t =
     | EndG -> ps
     | CallG (_, _, _, t) -> involved_with'' gp ps t
 
+(* not_involved_with is the opposite of involved_with *)
 let not_involved_with gp p = remove_participants (involved_with gp p) (roles gp)
 
 (* get_shortest takes a list of branches (of a choice) and returns the shortest branch *)
