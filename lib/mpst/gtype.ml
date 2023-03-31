@@ -358,8 +358,8 @@ module CrashPattern = struct
    e for element
    l for list
    r for role
-   p for participant (i should probably go rename all rs to ps or vice versa as they represent the same thing)
-   c for choice *)
+   c for choice
+   p for participant (i should probably go rename all rs to ps or vice versa as they represent the same thing) *)
 
 (* gets the head of a list *)
 let head l =
@@ -850,7 +850,7 @@ let rec trust_protocols trusted t =
 let apply_pattern pattern located_global_protocol =
   let begin_time = Unix.gettimeofday () in
     let gp = of_protocol located_global_protocol in
-      let all_messages_as_choice = Stdio.print_endline "hilooooooooooooooooooooooooo"; remove_redundant_choices (desugar gp) in
+      let all_messages_as_choice = remove_redundant_choices (desugar gp) in
         let all_choices_with_crash = add_crash_branches all_messages_as_choice in
           let pattern_applied = pattern all_choices_with_crash in
             let result = trust_protocols [] pattern_applied in 
